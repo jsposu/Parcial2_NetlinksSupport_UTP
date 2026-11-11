@@ -6,11 +6,15 @@ require dirname(__DIR__) . '/app/actions.php';
 $route = $_GET['route'] ?? 'home';
 if (!is_string($route)) { http_response_code(404); exit('Página no encontrada'); }
 try {
+    $user = me();
+    // El primer login solo habilita cambiar la contraseña o salir, incluso por URL/POST directo.
+    if ($user && (int)$user['debe_cambiar_password'] === 1 && !in_array($route, ['change-password','logout'], true)) go('change-password');
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         require_post();
         switch ($route) {
             case 'register': register_user(); break;
             case 'login': login_user(); break;
+            case 'change-password': change_initial_password(); break;
             case 'logout':
                 $_SESSION = [];
                 if (ini_get('session.use_cookies')) {
@@ -33,9 +37,14 @@ try {
         'home' => 'home', 'login' => 'login', 'register' => 'register',
         'service' => 'service', 'reservas' => 'reservas',
         'admin' => 'admin', 'admin-reservas' => 'admin-reservas',
+        'change-password' => 'change-password',
         default => null,
     };
     if (!$template) { http_response_code(404); exit('Página no encontrada'); }
+    if ($route === 'change-password') {
+        if (!$user) go('login');
+        if (!(int)$user['debe_cambiar_password']) go('home');
+    }
     if (in_array($route, ['admin','admin-reservas'], true)) $user = must_login(1);
     if ($route === 'reservas') $user = must_login(2);
     require dirname(__DIR__) . '/views/layout-top.php';

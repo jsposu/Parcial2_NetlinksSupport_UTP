@@ -1,12 +1,12 @@
 """Pruebas funcionales HTTP sobre una instalación LOCAL DE DESARROLLO.
 
 Uso: python tests/smoke.py http://127.0.0.1:8000/
-Lee contraseñas de README.local.md (excluido de Git). Crea reservas y una reseña.
+Cambia las claves iniciales de demo por claves efímeras. Crea reservas y una reseña.
 No usar en producción: utiliza una base recién importada y horarios con cupos.
 """
 import http.cookiejar
 import datetime
-import pathlib
+import secrets
 import re
 import sys
 import urllib.error
@@ -14,9 +14,7 @@ import urllib.parse
 import urllib.request
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else 'http://127.0.0.1:8000/').rstrip('/') + '/'
-LOCAL = pathlib.Path(__file__).resolve().parents[1] / 'README.local.md'
-text = LOCAL.read_text(encoding='utf-8')
-password = re.search(r'admin@netlinks\.pa\s*\|\s*([^|\s]+)', text).group(1)
+password = secrets.token_hex(16)
 
 
 class Browser:
@@ -66,6 +64,28 @@ fresh.login(fresh_email)
 assert fresh.get('admin')[0] == 403
 assert fresh.post('logout', {'csrf': fresh.csrf()})[0] == 200
 assert 'Crear cuenta' in fresh.get('reservas')[1]
+for browser, email, initial in [
+    (client, 'cliente@netlinks.pa', 'NetlinksCliente2026!'),
+    (other, 'otro@netlinks.pa', 'NetlinksOtro2026!'),
+    (admin, 'admin@netlinks.pa', 'NetlinksAdmin2026!'),
+]:
+    status, html, _ = browser.post('login', {'csrf': browser.csrf(), 'correo': email, 'password': initial})
+    assert status == 200 and 'Cambia tu contraseña' in html
+    for route in ['home', 'admin', 'reservas']:
+        assert 'Cambia tu contraseña' in browser.get(route)[1]
+    assert 'Cambia tu contraseña' in browser.post('book', {'csrf': browser.csrf(), 'servicio_id': 1, 'horario_id': 1})[1]
+    # Otra sesión con la contraseña inicial debe invalidarse después del primer cambio.
+    stale = Browser()
+    assert 'Cambia tu contraseña' in stale.post('login', {'csrf': stale.csrf(), 'correo': email, 'password': initial})[1]
+    assert browser.post('change-password', {'csrf': 'incorrecto', 'new_password': password, 'confirm_password': password})[0] == 403
+    for new, confirm in [('corta', 'corta'), (password, 'no coincide'), (initial, initial), ('ñ' * 40, 'ñ' * 40)]:
+        assert browser.post('change-password', {'csrf': browser.csrf(), 'new_password': new, 'confirm_password': confirm})[0] == 422
+    status, html, _ = browser.post('change-password', {'csrf': browser.csrf(), 'new_password': password, 'confirm_password': password})
+    assert status == 200 and 'Cambia tu contraseña' not in html
+    assert 'Inicia sesión' in stale.get('reservas' if email != 'admin@netlinks.pa' else 'admin')[1]
+    assert browser.post('logout', {'csrf': browser.csrf()})[0] == 200
+    assert browser.post('login', {'csrf': browser.csrf(), 'correo': email, 'password': initial})[0] == 422
+    browser.login(email)
 client.login('cliente@netlinks.pa')
 other.login('otro@netlinks.pa')
 admin.login('admin@netlinks.pa')
@@ -120,4 +140,4 @@ for attempt in range(5):
     assert throttle.post('login', {'csrf': throttle.csrf(), 'correo': 'bloqueo@netlinks.pa', 'password': 'incorrecta'})[0] == 422
 status, html, _ = throttle.post('login', {'csrf': throttle.csrf(), 'correo': 'bloqueo@netlinks.pa', 'password': 'incorrecta'})
 assert status == 422 and 'Demasiados intentos' in html
-print('OK: catálogo, CRUD, horarios, login/bloqueo, roles, cabeceras, SQLi, CSRF, propiedad, transiciones, reseña/XSS y cupos.')
+print('OK: primer acceso, cambio obligatorio, validaciones, clave inicial invalidada, sesiones revocadas, catálogo, CRUD, horarios, login/bloqueo, roles, cabeceras, SQLi, CSRF, propiedad, transiciones, reseña/XSS y cupos.')

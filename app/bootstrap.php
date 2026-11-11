@@ -63,13 +63,17 @@ function positive(mixed $value): int {
 }
 function me(): ?array {
     if (empty($_SESSION['uid'])) return null;
-    $user = q('SELECT u.id,u.nombre,u.apellido,u.rol_id FROM usuarios u WHERE u.id=? AND u.estado=\'ACTIVO\'', [$_SESSION['uid']])->fetch();
-    if (!$user) { unset($_SESSION['uid']); return null; }
+    $user = q('SELECT u.id,u.nombre,u.apellido,u.rol_id,u.debe_cambiar_password,u.password_version FROM usuarios u WHERE u.id=? AND u.estado=\'ACTIVO\'', [$_SESSION['uid']])->fetch();
+    if (!$user || (int)$user['password_version'] !== ($_SESSION['password_version'] ?? -1)) {
+        unset($_SESSION['uid'], $_SESSION['password_version']);
+        return null;
+    }
     return $user;
 }
 function must_login(?int $role = null): array {
     $user = me();
     if (!$user) go('login');
+    if ((int)$user['debe_cambiar_password'] === 1) go('change-password');
     if ($role !== null && (int)$user['rol_id'] !== $role) {
         http_response_code(403); exit('Acceso denegado.');
     }
@@ -94,6 +98,7 @@ if (PHP_SAPI !== 'cli') {
         'samesite' => 'Lax', 'path' => '/']);
     session_start();
     header('Content-Type: text/html; charset=UTF-8');
+    header('Cache-Control: no-store');
     header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'");
     header('X-Content-Type-Options: nosniff');
     header('X-Frame-Options: DENY');

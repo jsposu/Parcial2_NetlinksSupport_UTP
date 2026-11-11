@@ -5,7 +5,9 @@
 <title>Netlinks · Book&Go Lite</title><link rel="stylesheet" href="assets/style.css"></head><body>
 <header class="site-header"><div class="container nav"><a class="brand" href="<?= url('home') ?>"><span class="brand-icon" aria-hidden="true">✳</span> Net<span>links</span></a>
 <nav aria-label="Navegación principal"><a href="<?= url('home') ?>">Servicios</a>
-<?php if ($user && (int)$user['rol_id'] === 1): ?>
+<?php if ($user && (int)$user['debe_cambiar_password'] === 1): ?>
+<a href="<?= url('change-password') ?>">Cambiar contraseña</a>
+<?php elseif ($user && (int)$user['rol_id'] === 1): ?>
 <a href="<?= url('admin') ?>">Administrar</a><a href="<?= url('admin-reservas') ?>">Reservas</a>
 <?php elseif ($user): ?><a href="<?= url('reservas') ?>">Mis reservas</a><?php endif; ?>
 <?php if ($user): ?><span class="greeting">Hola, <?= e($user['nombre']) ?></span><form class="inline" method="post" action="<?= url('logout') ?>"><?= csrf_field() ?><button class="nav-button" type="submit">Salir</button></form>

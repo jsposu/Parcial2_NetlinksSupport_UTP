@@ -9,18 +9,32 @@ Aplicación de reservas de **soporte técnico** (PHP 8.2+, MySQL 8+ o MariaDB 10
 1. Inicia **Apache** y **MySQL** en el panel de XAMPP. Copia la carpeta completa como `C:\xampp\htdocs\Parcial2DesarrolloWeb` (sin cambiar su nombre). Para otros sistemas, usa el `htdocs` correspondiente.
 2. En `http://localhost/phpmyadmin/`, pestaña **Importar**, selecciona `database/bookgo.sql` y ejecútalo. El SQL crea `bookgo_lite`, ocho tablas (las siete obligatorias más `intentos_login`), tres categorías, seis servicios y seis horarios futuros. Si phpMyAdmin no permite crear bases, crea `bookgo_lite` en la interfaz e importa el archivo dentro de esa base.
 3. Copia `.env.example` a `.env`. Ajusta el usuario y contraseña **de tu instalación local**: XAMPP sin configurar suele usar `DB_USER=root` y `DB_PASSWORD=`. Nunca subas `.env` al repositorio. Para MariaDB con puerto distinto, modifica `DB_PORT`.
-4. En CMD de Windows: `cd C:\xampp\htdocs\Parcial2DesarrolloWeb` y después `C:\xampp\php\php.exe bin\create-demo.php` (Linux XAMPP: desde la carpeta del proyecto, `/opt/lampp/bin/php bin/create-demo.php`). Este paso crea los tres usuarios y escribe **`README.local.md` con sus correos y contraseñas de prueba**. Ese archivo está en `.gitignore` y no debe publicarse. Volver a ejecutarlo cambia las contraseñas de esos usuarios; si lo haces, consulta el README local actualizado.
+4. En CMD de Windows: `cd C:\xampp\htdocs\Parcial2DesarrolloWeb` y después `C:\xampp\php\php.exe bin\create-demo.php` (Linux XAMPP: desde la carpeta del proyecto, `/opt/lampp/bin/php bin/create-demo.php`). Este paso inicializa las tres cuentas locales con las claves temporales indicadas abajo, almacenando únicamente sus hashes. No genera contraseñas aleatorias ni `README.local.md`. Al ingresar, cada cuenta debe establecer su contraseña personal. Volver a ejecutar el script **no restablece cuentas ya inicializadas**.
 5. Abre **http://localhost/Parcial2DesarrolloWeb/public/**. Si la carpeta tiene otro nombre, ajusta la URL. `public/` es el único directorio accesible por HTTP: `.htaccess` bloquea la raíz del proyecto en XAMPP y permite `public/` (requiere `AllowOverride` habilitado). En un despliegue real, apunta directamente el `DocumentRoot` a `public/`; nunca publiques `app/`, `.env`, `bin/` o `database/`.
 
 ### Usuarios para iniciar sesión
 
 | Rol | Correo | Contraseña |
 | --- | --- | --- |
-| ADMIN | `admin@netlinks.pa` | La generada en **`README.local.md`** |
-| CLIENTE | `cliente@netlinks.pa` | La generada en **`README.local.md`** |
-| CLIENTE adicional | `otro@netlinks.pa` | La generada en **`README.local.md`** |
+| ADMIN | `admin@netlinks.pa` | `NetlinksAdmin2026!` |
+| CLIENTE | `cliente@netlinks.pa` | `NetlinksCliente2026!` |
+| CLIENTE adicional | `otro@netlinks.pa` | `NetlinksOtro2026!` |
 
-Las contraseñas **no figuran en este README público**: el enunciado prohíbe publicarlas. Para verlas en tu propio equipo abre `README.local.md` después del paso 4. Los usuarios también pueden registrarse desde la interfaz, siempre con rol CLIENTE.
+**Estas claves son públicas y exclusivamente de arranque para desarrollo local.** El primer login abre una pantalla obligatoria de cambio de contraseña (no un `prompt()` de JavaScript). Hasta completar el cambio no se puede reservar, administrar ni acceder a otras rutas. La nueva clave debe tener al menos 8 caracteres, máximo 72 bytes, confirmarse y ser distinta de todas las claves de arranque. Tras cambiarla, la inicial deja de funcionar y se invalidan las otras sesiones abiertas con ella. El registro público sigue creando CLIENTES con su contraseña personal, sin este paso inicial.
+
+**Advertencia:** una contraseña pública puede ser utilizada por cualquiera antes de que su propietario la cambie. No desplegar estas cuentas en Internet ni considerarlas un mecanismo seguro de alta de ADMIN para producción. El enunciado prohíbe publicar contraseñas: esta variante de demostración solicitada debe revisarse con el profesor antes de la entrega; el cambio obligatorio no elimina esa discrepancia. Nunca publicar las contraseñas personales definitivas.
+
+### Actualizar una base existente (Linux XAMPP)
+
+No borres ni reimportes tu base con datos. Copia primero el código actualizado a tu instalación y, con MySQL iniciado y `.env` configurado, ejecuta:
+
+```bash
+cd /opt/lampp/htdocs/Parcial2DesarrolloWeb
+/opt/lampp/bin/php bin/migrate-passwords.php
+/opt/lampp/bin/php bin/create-demo.php
+```
+
+La migración añade `debe_cambiar_password` y `password_version` sin borrar reservas. La primera inicialización de las tres cuentas `@netlinks.pa` existentes sustituye su antigua clave aleatoria por la temporal y obliga al cambio. Las cuentas ya inicializadas por esta versión no se restablecen al repetir el comando. Las antiguas cuentas `@nexosoporte.test`, si existen, no se modifican ni eliminan. Un `README.local.md` antiguo deja de ser una referencia de acceso a las cuentas actualizadas; mantenlo privado o elimínalo manualmente.
 
 ### Ejecutar sin Apache (opcional)
 
@@ -51,7 +65,7 @@ Los horarios del SQL son relativos al día de importación. Si ya vencieron, cre
 
 Se usa `password_hash`/`password_verify`, mínimo 8 caracteres, renovación del ID de sesión, cookies `HttpOnly` y `SameSite=Lax` (`Secure` bajo HTTPS), bloqueo por 15 minutos tras cinco fallos, PDO sin emulación, `htmlspecialchars(ENT_QUOTES, UTF-8)`, tokens CSRF, comprobación de roles y propiedad en PHP, CSP, `nosniff` y `X-Frame-Options: DENY`. Los errores SQL se registran en el servidor y no se muestran al visitante. **Las capturas y resultados observados deben realizarse en el XAMPP del equipo**, siguiendo `security/SECURITY.md`.
 
-Prueba automatizada adicional (sobre una instalación de desarrollo **recién importada**, pues crea reservas/reseñas): `python tests/smoke.py http://localhost/Parcial2DesarrolloWeb/public/`. Lee `README.local.md`, no necesita paquetes externos de Python. Para regenerar el PDF después de editar el HTML: `chromium --headless --no-sandbox --no-pdf-header-footer --print-to-pdf=docs/Informe.pdf file:///RUTA/ABSOLUTA/Parcial2DesarrolloWeb/docs/Informe.html` o imprimir el HTML a PDF desde el navegador.
+Prueba automatizada adicional (sobre una instalación de desarrollo **recién importada e inicializada**, pues cambia las contraseñas de demo y crea reservas/reseñas): `python tests/smoke.py http://localhost/Parcial2DesarrolloWeb/public/`. No necesita paquetes externos de Python. Comprueba el primer acceso, bloqueo de rutas, CSRF, validaciones, rechazo de la clave inicial después del cambio y el flujo de reservas. Para regenerar el PDF después de editar el HTML: `chromium --headless --no-sandbox --no-pdf-header-footer --print-to-pdf=docs/Informe.pdf file:///RUTA/ABSOLUTA/Parcial2DesarrolloWeb/docs/Informe.html` o imprimir el HTML a PDF desde el navegador.
 
 ## Entrega y honestidad académica
 

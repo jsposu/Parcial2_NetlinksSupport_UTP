@@ -6,7 +6,7 @@ function register_user(): void {
     $email = valid_email(input('correo', 190)); $password = input('password', 255);
     if (!$name || !$surname || mb_strlen($password) < 8) throw new DomainException('Complete nombre, apellido y contraseña de mínimo 8 caracteres.');
     if (q('SELECT id FROM usuarios WHERE correo=?', [$email])->fetch()) throw new DomainException('No se pudo completar el registro con ese correo.');
-    q('INSERT INTO usuarios(rol_id,nombre,apellido,correo,password_hash) VALUES(2,?,?,?,?)',
+    q('INSERT INTO usuarios(rol_id,nombre,apellido,correo,password_hash,password_version) VALUES(2,?,?,?,?,1)',
       [$name,$surname,$email,password_hash($password, PASSWORD_DEFAULT)]);
     notice('Cuenta creada. Ya puede iniciar sesión.'); go('login');
 }
@@ -16,7 +16,7 @@ function login_user(): void {
     $attempt = q('SELECT fallos,bloqueado_hasta FROM intentos_login WHERE clave=?', [$key])->fetch();
     if ($attempt && $attempt['bloqueado_hasta'] && strtotime($attempt['bloqueado_hasta']) > time())
         throw new DomainException('Demasiados intentos. Espere 15 minutos y pruebe de nuevo.');
-    $user = q('SELECT id,password_hash FROM usuarios WHERE correo=? AND estado=\'ACTIVO\'', [$email])->fetch();
+    $user = q('SELECT id,password_hash,debe_cambiar_password,password_version FROM usuarios WHERE correo=? AND estado=\'ACTIVO\'', [$email])->fetch();
     // Evita revelar mediante el mensaje si existe el correo.
     $dummy = '$2y$10$05YwBGV4qNzGNdYS51mc6eHTPnb6p7v7dW.MCLZRBlqFkFYOmMuBq';
     if (!password_verify($password, $user['password_hash'] ?? $dummy)) {
@@ -27,7 +27,32 @@ function login_user(): void {
     }
     q('DELETE FROM intentos_login WHERE clave=?', [$key]);
     session_regenerate_id(true); $_SESSION['uid'] = $user['id'];
+    $_SESSION['password_version'] = (int)$user['password_version'];
+    $_SESSION['csrf'] = bin2hex(random_bytes(32));
+    if ((int)$user['debe_cambiar_password'] === 1) go('change-password');
     notice('Bienvenido a Netlinks.'); go('home');
+}
+function change_initial_password(): void {
+    $user = me();
+    if (!$user) go('login');
+    if (!(int)$user['debe_cambiar_password']) go('home');
+    $password = input('new_password', 255);
+    $confirmation = input('confirm_password', 255);
+    if (mb_strlen($password, 'UTF-8') < 8 || strlen($password) > 72)
+        throw new DomainException('La contraseña debe tener al menos 8 caracteres y no superar 72 bytes.');
+    if ($password !== $confirmation) throw new DomainException('Las contraseñas no coinciden.');
+    foreach (require __DIR__ . '/demo-accounts.php' as $account) {
+        if (hash_equals($account[4], $password)) throw new DomainException('Elija una contraseña personal distinta de las claves iniciales públicas.');
+    }
+    // CAS: un segundo formulario/sesión no puede sobrescribir el primer cambio.
+    $saved = q('UPDATE usuarios SET password_hash=?,debe_cambiar_password=0,password_version=password_version+1 WHERE id=? AND password_version=? AND debe_cambiar_password=1 AND estado=\'ACTIVO\'',
+        [password_hash($password, PASSWORD_DEFAULT),$user['id'],$user['password_version']]);
+    if (!$saved->rowCount()) { unset($_SESSION['uid'], $_SESSION['password_version']); go('login'); }
+    session_regenerate_id(true);
+    $_SESSION['password_version'] = (int)$user['password_version'] + 1;
+    $_SESSION['csrf'] = bin2hex(random_bytes(32));
+    notice('Contraseña actualizada. La clave inicial ya no permite acceder.');
+    go('home');
 }
 function save_entity(string $entity): void {
     must_login(1);
