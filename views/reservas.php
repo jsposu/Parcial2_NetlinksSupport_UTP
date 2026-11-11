@@ -1,0 +1,11 @@
+<?php
+$bookings = q("SELECT b.*,s.nombre AS servicio,h.fecha,h.hora_inicio,h.hora_fin,r.id AS resena_id FROM reservas b
+ JOIN servicios s ON s.id=b.servicio_id JOIN horarios h ON h.id=b.horario_id
+ LEFT JOIN resenas r ON r.reserva_id=b.id WHERE b.cliente_id=? ORDER BY h.fecha DESC,h.hora_inicio DESC", [$user['id']])->fetchAll();
+?>
+<main class="container section"><div class="section-title"><div><span class="eyebrow">TU ESPACIO</span><h1>Mis reservas</h1></div><a class="button" href="<?= url('home') ?>">Nueva cita ↗</a></div>
+<?php foreach ($bookings as $b): ?><article class="booking"><div class="booking-main"><span class="pill status-<?= e(strtolower($b['estado'])) ?>"><?= e($b['estado']) ?></span><h2><?= e($b['servicio']) ?></h2><p><?= e($b['fecha']) ?> · <?= e(substr($b['hora_inicio'],0,5)) ?> – <?= e(substr($b['hora_fin'],0,5)) ?></p><small>Reserva #<?= e($b['id']) ?> · Creada <?= e($b['creada_en']) ?></small></div><div class="booking-actions">
+<?php if (in_array($b['estado'], ['PENDIENTE','CONFIRMADA'],true) && strtotime($b['fecha'].' '.$b['hora_inicio']) > time()): ?><form method="post" action="<?= url('cancel') ?>"><?= csrf_field() ?><input type="hidden" name="id" value="<?= e($b['id']) ?>"><button class="button-outline" data-confirm="¿Cancelar esta reserva?" type="submit">Cancelar cita</button></form><?php endif; ?>
+<?php if ($b['estado'] === 'REALIZADA' && !$b['resena_id']): ?><form class="review-form" method="post" action="<?= url('review') ?>"><?= csrf_field() ?><input type="hidden" name="reserva_id" value="<?= e($b['id']) ?>"><label>Calificación<select required name="calificacion"><option value="">Elige 1–5</option><?php for ($i=1;$i<=5;$i++): ?><option value="<?= $i ?>"><?= $i ?> ★</option><?php endfor; ?></select></label><label>Tu experiencia<textarea required name="comentario" maxlength="1500" rows="3" placeholder="¿Cómo fue la atención?"></textarea></label><button class="button small-button" type="submit">Publicar reseña</button></form><?php elseif ($b['resena_id']): ?><span class="pill">Reseña publicada</span><?php endif; ?>
+</div></article><?php endforeach; ?>
+<?php if (!$bookings): ?><p class="empty">Aún no tienes citas. <a href="<?= url('home') ?>">Explora los servicios</a>.</p><?php endif; ?></main>

@@ -1,0 +1,3 @@
+# Si se copia el proyecto dentro de htdocs, bloquear todo salvo public/.
+Options -Indexes
+Require all denied

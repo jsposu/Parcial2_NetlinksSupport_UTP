@@ -1,0 +1,3 @@
+<main class="container narrow section"><div class="panel"><span class="eyebrow">BIENVENIDO DE VUELTA</span><h1>Inicia sesión</h1><p>Consulta tus citas y administra tu experiencia.</p>
+<form method="post" action="<?= url('login') ?>"><?= csrf_field() ?><label>Correo electrónico<input required type="email" name="correo" autocomplete="username" maxlength="190"></label><label>Contraseña<input required type="password" name="password" autocomplete="current-password"></label><button class="button full" type="submit">Ingresar</button></form>
+<p class="small">¿Aún no tienes cuenta? <a href="<?= url('register') ?>">Regístrate</a></p></div></main>

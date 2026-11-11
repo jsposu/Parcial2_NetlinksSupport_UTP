@@ -1,0 +1,15 @@
+<?php
+$id = positive($_GET['id'] ?? null);
+$service = q("SELECT s.*,c.nombre AS categoria,c.estado AS categoria_estado FROM servicios s JOIN categorias c ON c.id=s.categoria_id WHERE s.id=?", [$id])->fetch();
+if (!$service || $service['estado'] !== 'ACTIVO' || $service['categoria_estado'] !== 'ACTIVO') { http_response_code(404); echo '<main class="container section"><h1>Servicio no disponible</h1></main>'; return; }
+$slots = q("SELECT * FROM horarios WHERE servicio_id=? AND estado='ACTIVO' AND TIMESTAMP(fecha,hora_inicio)>NOW() ORDER BY fecha,hora_inicio", [$id])->fetchAll();
+$reviews = q("SELECT r.calificacion,r.comentario,r.creada_en,u.nombre FROM resenas r JOIN reservas b ON b.id=r.reserva_id JOIN usuarios u ON u.id=r.cliente_id WHERE b.servicio_id=? AND b.estado='REALIZADA' ORDER BY r.creada_en DESC", [$id])->fetchAll();
+?>
+<main class="container section"><a class="back" href="<?= url('home') ?>">← Volver al catálogo</a><div class="detail-head"><div><span class="eyebrow"><?= e($service['categoria']) ?></span><h1><?= e($service['nombre']) ?></h1><p><?= e($service['descripcion']) ?></p></div><div class="price-box"><span>Desde</span><strong>$<?= e(number_format((float)$service['precio'],2)) ?></strong><small>Duración: <?= e($service['duracion_min']) ?> minutos</small></div></div>
+<div class="section-title"><div><span class="eyebrow">RESERVA TU MOMENTO</span><h2>Horarios disponibles</h2></div></div>
+<div class="slot-grid"><?php foreach ($slots as $slot): ?><article class="slot"><div><strong><?= e($slot['fecha']) ?></strong><p><?= e(substr($slot['hora_inicio'],0,5)) ?> – <?= e(substr($slot['hora_fin'],0,5)) ?></p><small><?= e($slot['cupos_disponibles']) ?> de <?= e($slot['cupos_total']) ?> cupos disponibles</small></div>
+<?php if ((int)$slot['cupos_disponibles'] && $user && (int)$user['rol_id'] === 2): ?><form method="post" action="<?= url('book') ?>"><?= csrf_field() ?><input type="hidden" name="horario_id" value="<?= e($slot['id']) ?>"><input type="hidden" name="servicio_id" value="<?= e($id) ?>"><button class="button small-button" type="submit">Reservar</button></form>
+<?php elseif (!$user && (int)$slot['cupos_disponibles']): ?><a class="button small-button" href="<?= url('login') ?>">Ingresar</a><?php else: ?><span class="pill">No disponible</span><?php endif; ?></article><?php endforeach; ?></div>
+<?php if (!$slots): ?><p class="empty">Todavía no hay horarios futuros disponibles.</p><?php endif; ?>
+<div class="section-title reviews-title"><div><span class="eyebrow">EXPERIENCIAS REALES</span><h2>Opiniones de clientes</h2></div></div><div class="review-grid"><?php foreach ($reviews as $review): ?><article class="review"><span class="stars" aria-label="<?= e($review['calificacion']) ?> de 5 estrellas"><?= str_repeat('★', (int)$review['calificacion']) ?></span><p><?= nl2br(e($review['comentario'])) ?></p><small><?= e($review['nombre']) ?> · <?= e($review['creada_en']) ?></small></article><?php endforeach; ?></div>
+<?php if (!$reviews): ?><p class="empty">Este servicio aún no tiene reseñas.</p><?php endif; ?></main>

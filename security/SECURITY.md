@@ -1,0 +1,15 @@
+# Seguridad — plan de verificación en el entorno local
+
+**Importante:** Las siete pruebas se ejecutaron automáticamente el 9/11/2026 sobre **bases locales aisladas**, primero PHP 8.5 / MariaDB 13 y después **PHP 8.2 y MariaDB 10.4 de XAMPP**, con el servidor de desarrollo PHP (script `tests/smoke.py`); la última salida fue `OK: catálogo, CRUD, horarios, login/bloqueo, roles, cabeceras, SQLi, CSRF, propiedad, transiciones, reseña/XSS y cupos.` Las **capturas de navegador en el Apache/XAMPP del equipo aún están pendientes**. No confundir la verificación automatizada con estas evidencias visuales exigidas. Guardar capturas propias en `security/evidencias/` con nombres como `01-sqli.png` a `07-cabeceras.png`; ocultar cookies y contraseñas. Anotar versión, fecha y resultado observado del equipo.
+
+| Prueba / objetivo | Pasos en el entorno de desarrollo | Resultado esperado / control aplicado | Resultado observado y captura |
+| --- | --- | --- | --- |
+| 1. SQLi en login/búsqueda | Probar correo `x' OR '1'='1` y búsqueda `' OR 1=1 --` | No entra ni altera consultas; PDO preparado en `app/bootstrap.php` y `app/actions.php` | Automatizado: login no autorizado, búsqueda 200. **Captura XAMPP pendiente** |
+| 2. XSS en comentario | Completar una reserva y reseñar con `<script>alert(1)</script>`; abrir detalle | Se ve el texto, nunca se ejecuta; `e()` usa `htmlspecialchars` + CSP | Automatizado: HTML contiene `&lt;script&gt;` y no `<script>alert(1)</script>`. **Captura XAMPP pendiente** |
+| 3. Cliente en ADMIN | Iniciar como CLIENTE y abrir `?route=admin` / `?route=admin-reservas` | HTTP 403; `must_login(1)` | Automatizado: `?route=admin` dio 403. **Captura XAMPP pendiente** |
+| 4. Reserva ajena | Crear reserva del primer cliente; como el segundo intentar POST `?route=cancel` con el ID ajeno y CSRF propio | HTTP 422, sin alterar estado/cupo; verificación `cliente_id` en `change_booking()` | Automatizado: POST ajeno dio 422. **Captura XAMPP pendiente** |
+| 5. CSRF | Desde DevTools eliminar o cambiar el valor `csrf` de un formulario de cancelación/estado | HTTP 403; sin modificar datos; `require_post()` | Automatizado: token inválido dio 403. **Captura XAMPP pendiente** |
+| 6. Cinco intentos | Introducir cinco veces correo de prueba con clave equivocada; repetir | Bloqueo de 15 minutos para esa combinación correo/IP; tabla `intentos_login` | Automatizado: sexto intento dio 422 con aviso de bloqueo. **Captura XAMPP pendiente** |
+| 7. Cabeceras HTTP | DevTools → Network → respuesta principal, o `curl -I http://localhost/Parcial2DesarrolloWeb/public/` | CSP, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` | Automatizado: CSP y `nosniff` presentes; DENY configurado en código. **Captura XAMPP pendiente** |
+
+Adicionalmente comprobar manualmente: reenvío de cancelación (un solo cupo devuelto), dos solicitudes simultáneas al último cupo, reserva duplicada activa, reseña duplicada, precio/duración inválidos, horario pasado y relación servicio-horario. Consignar el resultado observado, no solo el código. Los datos de demo y su contraseña se guardan **solo localmente** en `README.local.md` (excluido del repositorio).
