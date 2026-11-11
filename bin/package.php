@@ -9,7 +9,7 @@ if (!is_dir($output)) mkdir($output, 0755, true);
 $filename = $output . '/PW2026_' . $group . '_BookGoLite.zip';
 $zip = new ZipArchive();
 if ($zip->open($filename, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) { fwrite(STDERR, "No se pudo crear ZIP.\n"); exit(1); }
-$files = ['.htaccess','.env.example','.gitignore','README.md','app','bin','database','docs','public','security','tests','views'];
+$files = ['.htaccess','.env.example','.gitignore','README.md','instalar.py','app','bin','database','docs','public','security','tests','views'];
 foreach ($files as $part) {
     $path = $root . '/' . $part;
     if (is_file($path)) { $zip->addFile($path, $part); continue; }

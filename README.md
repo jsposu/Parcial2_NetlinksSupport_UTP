@@ -1,72 +1,73 @@
+![Netlinks — catálogo de servicios de soporte técnico](docs/images/netlinks-home.png)
+
 # Netlinks · Book&Go Lite
 
-Aplicación de reservas de **soporte técnico** (PHP 8.2+, MySQL 8+ o MariaDB 10.4+, HTML5, CSS3 y JavaScript). Proyecto Parcial 2, Desarrollo Web, 2026.
+Reservas de soporte técnico con PHP 8.2+, MySQL/MariaDB y diseño adaptable. Proyecto de Desarrollo Web · UTP · **JHOP**: Joseph Gantes, Henry Ramirez, Omar Herrera y Paul Zerpa.
 
-**Equipo:** Joseph Gantes, Henry Ramirez, Omar Herrera y Paul Zerpa.
+## Instalar — recomendado
 
-## Instalar en XAMPP (Windows)
+Necesitas **XAMPP instalado**, Apache/MySQL iniciados y **Python 3.9+**. Descarga o clona este repositorio **fuera de `htdocs`**, abre una terminal en él y ejecuta:
 
-1. Inicia **Apache** y **MySQL** en el panel de XAMPP. Copia la carpeta completa como `C:\xampp\htdocs\Parcial2DesarrolloWeb` (sin cambiar su nombre). Para otros sistemas, usa el `htdocs` correspondiente.
-2. En `http://localhost/phpmyadmin/`, pestaña **Importar**, selecciona `database/bookgo.sql` y ejecútalo. El SQL crea `bookgo_lite`, ocho tablas (las siete obligatorias más `intentos_login`), tres categorías, seis servicios y seis horarios futuros. Si phpMyAdmin no permite crear bases, crea `bookgo_lite` en la interfaz e importa el archivo dentro de esa base.
-3. Copia `.env.example` a `.env`. Ajusta el usuario y contraseña **de tu instalación local**: XAMPP sin configurar suele usar `DB_USER=root` y `DB_PASSWORD=`. Nunca subas `.env` al repositorio. Para MariaDB con puerto distinto, modifica `DB_PORT`.
-4. En CMD de Windows: `cd C:\xampp\htdocs\Parcial2DesarrolloWeb` y después `C:\xampp\php\php.exe bin\create-demo.php` (Linux XAMPP: desde la carpeta del proyecto, `/opt/lampp/bin/php bin/create-demo.php`). Este paso inicializa las tres cuentas locales con las claves temporales indicadas abajo, almacenando únicamente sus hashes. No genera contraseñas aleatorias ni `README.local.md`. Al ingresar, cada cuenta debe establecer su contraseña personal. Volver a ejecutar el script **no restablece cuentas ya inicializadas**.
-5. Abre **http://localhost/Parcial2DesarrolloWeb/public/**. Si la carpeta tiene otro nombre, ajusta la URL. `public/` es el único directorio accesible por HTTP: `.htaccess` bloquea la raíz del proyecto en XAMPP y permite `public/` (requiere `AllowOverride` habilitado). En un despliegue real, apunta directamente el `DocumentRoot` a `public/`; nunca publiques `app/`, `.env`, `bin/` o `database/`.
+**Se usa MySQL/MariaDB que ya viene con XAMPP**, el mismo que administras desde phpMyAdmin. No instales otro servidor de base de datos.
 
-### Usuarios para iniciar sesión
+| Sistema | Comando |
+| --- | --- |
+| Windows | `py -3 instalar.py` |
+| Linux / macOS | `python3 instalar.py` |
 
-| Rol | Correo | Contraseña |
+Confirma una vez y listo: **detecta XAMPP → crea/reutiliza `bookgo_lite` → copia el sitio → muestra el enlace e intenta abrir el navegador**. Usa los valores normales de XAMPP (`root`, sin contraseña); solo pide la contraseña de MySQL si hace falta. Si ya existe `.env` en el destino, conserva su conexión.
+
+**No borra bases, no crea respaldos ni guarda nada en `/root`.** Solo copia a `htdocs/Parcial2DesarrolloWeb`, conserva archivos locales y no restablece contraseñas personales ya activadas. Si la base existe, la reutiliza y aplica las migraciones necesarias.
+
+Ruta distinta: `python3 instalar.py --xampp /ruta/a/xampp` (Windows: `py -3 instalar.py --xampp "D:\xampp"`). Si faltan permisos, usa una terminal de administrador o `sudo python3 instalar.py`. Con `sudo`, abre el enlace desde tu navegador habitual, no como root. `--no-browser` evita abrir el navegador y `--no-color` desactiva los colores.
+
+Al terminar abre **http://localhost/Parcial2DesarrolloWeb/public/**. [Detalles, recuperación y pruebas del instalador](docs/INSTALACION.md).
+
+<details>
+<summary><strong>Instalación manual — Windows, Linux y macOS</strong></summary>
+
+Inicia Apache y MySQL. Usa estas rutas según tu sistema:
+
+| Sistema | Carpeta de destino | Ejecutable PHP |
+| --- | --- | --- |
+| Windows | `C:\xampp\htdocs\Parcial2DesarrolloWeb` | `C:\xampp\php\php.exe` |
+| Linux | `/opt/lampp/htdocs/Parcial2DesarrolloWeb` | `/opt/lampp/bin/php` |
+| macOS | `/Applications/XAMPP/xamppfiles/htdocs/Parcial2DesarrolloWeb` | `/Applications/XAMPP/xamppfiles/bin/php` |
+
+1. Copia el proyecto completo al destino, incluidos `.htaccess` y `.env.example`.
+2. En [phpMyAdmin](http://localhost/phpmyadmin/), importa `database/bookgo.sql`. Crea **`bookgo_lite`** automáticamente.
+3. Copia `.env.example` como `.env` y ajusta la conexión MySQL (XAMPP local suele usar `root` sin contraseña).
+4. Desde la carpeta destino, ejecuta **el PHP de tu sistema** seguido de `bin/create-demo.php`. Ejemplo Linux: `/opt/lampp/bin/php bin/create-demo.php`.
+5. Abre **http://localhost/Parcial2DesarrolloWeb/public/**.
+
+**¿Actualizas una instalación existente?** Respalda primero archivos y base. No reimportes el SQL: copia el código conservando `.env` y ejecuta, en este orden, `PHP bin/migrate-passwords.php` y `PHP bin/create-demo.php`, sustituyendo `PHP` por el ejecutable de la tabla. [Más ayuda](docs/INSTALACION.md).
+</details>
+
+## Primer acceso
+
+| Rol | Correo | Clave temporal |
 | --- | --- | --- |
 | ADMIN | `admin@netlinks.pa` | `NetlinksAdmin2026!` |
 | CLIENTE | `cliente@netlinks.pa` | `NetlinksCliente2026!` |
 | CLIENTE adicional | `otro@netlinks.pa` | `NetlinksOtro2026!` |
 
-**Estas claves son públicas y exclusivamente de arranque para desarrollo local.** El primer login abre una pantalla obligatoria de cambio de contraseña (no un `prompt()` de JavaScript). Hasta completar el cambio no se puede reservar, administrar ni acceder a otras rutas. La nueva clave debe tener al menos 8 caracteres, máximo 72 bytes, confirmarse y ser distinta de todas las claves de arranque. Tras cambiarla, la inicial deja de funcionar y se invalidan las otras sesiones abiertas con ella. El registro público sigue creando CLIENTES con su contraseña personal, sin este paso inicial.
+Al ingresar debes cambiar la clave antes de usar el sistema: mínimo 8 caracteres, máximo 72 bytes y confirmación. La temporal deja de funcionar después del cambio. **Estas cuentas públicas son solo para desarrollo local, no para producción.** Nunca publiques `.env`, contraseñas personales ni respaldos. El enunciado prohíbe publicar contraseñas: consulta con el docente esta variante de demostración.
 
-**Advertencia:** una contraseña pública puede ser utilizada por cualquiera antes de que su propietario la cambie. No desplegar estas cuentas en Internet ni considerarlas un mecanismo seguro de alta de ADMIN para producción. El enunciado prohíbe publicar contraseñas: esta variante de demostración solicitada debe revisarse con el profesor antes de la entrega; el cambio obligatorio no elimina esa discrepancia. Nunca publicar las contraseñas personales definitivas.
+## Qué incluye
 
-### Actualizar una base existente (Linux XAMPP)
+- Catálogo con búsqueda, categorías, seis servicios y horarios futuros.
+- ADMIN: mantenimiento de categorías, servicios y horarios; confirmación, atención y cancelación de reservas.
+- CLIENTE: registro, reservas propias, cancelaciones y reseñas de atenciones realizadas.
+- Cupos transaccionales, permisos PHP, hashes, CSRF, PDO preparado, salida codificada y bloqueo de login.
 
-No borres ni reimportes tu base con datos. Copia primero el código actualizado a tu instalación y, con MySQL iniciado y `.env` configurado, ejecuta:
+**Demo:** reservar como CLIENTE → confirmar y marcar REALIZADA como ADMIN → reseñar como CLIENTE. Los horarios del SQL se crean relativos al día de importación; si vencen, crea nuevos como ADMIN. Hora: Panamá (UTC−05:00).
 
-```bash
-cd /opt/lampp/htdocs/Parcial2DesarrolloWeb
-/opt/lampp/bin/php bin/migrate-passwords.php
-/opt/lampp/bin/php bin/create-demo.php
-```
+## Documentación y pruebas
 
-La migración añade `debe_cambiar_password` y `password_version` sin borrar reservas. La primera inicialización de las tres cuentas `@netlinks.pa` existentes sustituye su antigua clave aleatoria por la temporal y obliga al cambio. Las cuentas ya inicializadas por esta versión no se restablecen al repetir el comando. Las antiguas cuentas `@nexosoporte.test`, si existen, no se modifican ni eliminan. Un `README.local.md` antiguo deja de ser una referencia de acceso a las cuentas actualizadas; mantenlo privado o elimínalo manualmente.
+- [Instalador y recuperación](docs/INSTALACION.md) · [Arquitectura](docs/ARQUITECTURA.md) · [Pruebas de seguridad](security/SECURITY.md).
+- Pruebas del instalador: `python3 -m unittest discover -s tests -p "test_installer.py"`.
+- Flujo web sobre una **base local recién importada e inicializada**: `python3 tests/smoke.py http://localhost/Parcial2DesarrolloWeb/public/` (cambia claves de demo y crea reservas).
+- Informe: `docs/Informe.html` y `docs/Informe.pdf`. Capturas de seguridad y reflexiones individuales pendientes del equipo.
+- Empaquetar: `php bin/package.php` → `entrega/PW2026_JHOP_BookGoLite.zip`, sin credenciales privadas.
 
-### Ejecutar sin Apache (opcional)
-
-Con una base MySQL en funcionamiento: `php -S 127.0.0.1:8000 -t public` y abrir `http://127.0.0.1:8000/`. En algunas instalaciones Linux se requiere habilitar la extensión `pdo_mysql` de PHP; en XAMPP viene normalmente incluida.
-
-## Flujo de demostración
-
-1. Cliente: catálogo → buscar/filtrar → detalle → horario futuro → reservar (PENDIENTE, -1 cupo) → Mis reservas.
-2. Admin: Reservas → CONFIRMADA → REALIZADA. Cliente: Mis reservas → dejar una reseña (1–5). Volver al detalle para verla publicada.
-3. Para probar cancelación: reservar otro horario → cancelar antes de que comience → comprobar que vuelve **un solo cupo**. Repetir el envío no vuelve a sumarlo.
-4. Admin: crear/editar/desactivar categorías, servicios y horarios; comprobar que el catálogo solo muestra activos. Un horario con reservas conserva sus datos históricos y sus cupos ocupados.
-5. Para probar la propiedad de recursos, entrar como `otro@netlinks.pa` y tratar de actuar sobre el identificador de una reserva del primer cliente: el servidor la rechaza.
-
-Los horarios del SQL son relativos al día de importación. Si ya vencieron, crea nuevos desde Administración → Horarios. El huso horario de la aplicación y la conexión es **America/Panama (UTC−05:00)**; verifica el reloj del equipo anfitrión.
-
-## Diseño técnico
-
-- `public/index.php`: rutas de lectura y acciones POST; `public/assets/`: estilos y confirmación JS.
-- `app/bootstrap.php`: configuración, PDO preparado, sesión, cabeceras, CSRF y validaciones comunes; `app/actions.php`: lógica de negocio.
-- `views/`: páginas públicas, cliente y ADMIN. `database/bookgo.sql`: esquema, integridad referencial y datos de ejemplo.
-- `bin/create-demo.php`: inicialización CLI de cuentas locales con hashes; `security/SECURITY.md`: guion de pruebas y resultados por completar con pruebas reales.
-- `docs/Informe.html` y `docs/Informe.pdf`: informe base con diagrama ER y secciones de evidencias/reflexiones **pendientes de completar por el equipo**.
-- Sin bibliotecas ni plantillas visuales externas: estilos CSS propios, tipografía del sistema y dibujo CSS. No necesita Internet.
-
-**Integridad de reservas:** `reservas(horario_id,servicio_id)` referencia `horarios(id,servicio_id)`; una clave única generada impide dos reservas no canceladas por cliente/horario; `resenas(reserva_id)` es única y la FK compuesta comprueba que pertenezca al cliente. Una transacción bloquea primero el horario, comprueba cupos y luego actualiza de forma condicionada y registra la reserva. Las cancelaciones bloquean en el mismo orden, comprueban estado y devuelven un único cupo. Los cupos y valores básicos tienen `CHECK` en la base. Los registros asociados a otros se **desactivan** en vez de borrarse.
-
-## Seguridad y pruebas
-
-Se usa `password_hash`/`password_verify`, mínimo 8 caracteres, renovación del ID de sesión, cookies `HttpOnly` y `SameSite=Lax` (`Secure` bajo HTTPS), bloqueo por 15 minutos tras cinco fallos, PDO sin emulación, `htmlspecialchars(ENT_QUOTES, UTF-8)`, tokens CSRF, comprobación de roles y propiedad en PHP, CSP, `nosniff` y `X-Frame-Options: DENY`. Los errores SQL se registran en el servidor y no se muestran al visitante. **Las capturas y resultados observados deben realizarse en el XAMPP del equipo**, siguiendo `security/SECURITY.md`.
-
-Prueba automatizada adicional (sobre una instalación de desarrollo **recién importada e inicializada**, pues cambia las contraseñas de demo y crea reservas/reseñas): `python tests/smoke.py http://localhost/Parcial2DesarrolloWeb/public/`. No necesita paquetes externos de Python. Comprueba el primer acceso, bloqueo de rutas, CSRF, validaciones, rechazo de la clave inicial después del cambio y el flujo de reservas. Para regenerar el PDF después de editar el HTML: `chromium --headless --no-sandbox --no-pdf-header-footer --print-to-pdf=docs/Informe.pdf file:///RUTA/ABSOLUTA/Parcial2DesarrolloWeb/docs/Informe.html` o imprimir el HTML a PDF desde el navegador.
-
-## Entrega y honestidad académica
-
-El PDF del curso exige un ZIP del proyecto. El identificador de este equipo es **JHOP** (Joseph, Henry, Omar y Paul), por lo que el archivo se llama `PW2026_JHOP_BookGoLite.zip`. Ejecutar `php bin/package.php` para regenerarlo en `entrega/`. No incluye `.env` ni `README.local.md`. El informe PDF debe contener diagrama ER, módulos, capturas y **reflexión individual auténtica**; además se requieren evidencias reales de seguridad, un repositorio GitHub compartido y contribuciones verificables de los cuatro integrantes. **Después de insertar capturas reales y completar/refrescar el informe, volver a generar el ZIP.** No se han inventado capturas, reflexiones ni historial. **Uso de IA:** se utilizó OpenCode como apoyo para proponer e implementar esta base de código; antes de entregarla cada integrante debe comprenderla, probarla, modificarla según sus aportes y documentar los fragmentos y verificaciones en el informe, conforme a la sección 11 del enunciado. No presentar como trabajo propio código generado íntegramente por IA.
+**Uso de IA:** OpenCode apoyó la implementación y documentación. El equipo debe verificar el código, registrar sus aportes reales y poder explicarlo; no presentar generación íntegra de IA como trabajo propio. No se inventaron contribuciones, reflexiones ni evidencias.
