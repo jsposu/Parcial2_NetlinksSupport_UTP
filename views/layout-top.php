@@ -14,5 +14,5 @@
 <?php else: ?><a href="<?= url('login') ?>">Ingresar</a><a class="nav-button" href="<?= url('register') ?>">Crear cuenta</a><?php endif; ?>
 </nav></div></header>
 <?php if (isset($_SESSION['flash'])): [$message,$type] = $_SESSION['flash']; unset($_SESSION['flash']); ?>
-<div class="container"><p class="alert <?= e($type) ?>" role="status"><?= e($message) ?></p></div>
+<div class="container flash-messages"><p class="alert <?= e($type) ?>" role="status"><?= e($message) ?></p></div>
 <?php endif; ?>
