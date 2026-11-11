@@ -70,4 +70,4 @@ Al ingresar debes cambiar la clave antes de usar el sistema: mínimo 8 caractere
 - Informe: `docs/Informe.html` y `docs/Informe.pdf`. Capturas de seguridad y reflexiones individuales pendientes del equipo.
 - Empaquetar: `php bin/package.php` → `entrega/PW2026_JHOP_BookGoLite.zip`, sin credenciales privadas.
 
-**Uso de IA:** OpenCode apoyó la implementación y documentación. El equipo debe verificar el código, registrar sus aportes reales y poder explicarlo; no presentar generación íntegra de IA como trabajo propio. No se inventaron contribuciones, reflexiones ni evidencias.
+**Uso de IA:** El equipo utilizó OpenCode con varios modelos como apoyo para desarrollar la estructura principal del código. Las ideas, los requisitos y la información del proyecto se proporcionaron manualmente a la IA. El equipo revisó y probó el código de este repositorio y asume la responsabilidad por cada línea de código entregada.
