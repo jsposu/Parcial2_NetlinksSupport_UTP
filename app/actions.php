@@ -4,7 +4,8 @@ declare(strict_types=1);
 function register_user(): void {
     $name = input('nombre', 80); $surname = input('apellido', 80);
     $email = valid_email(input('correo', 190)); $password = input('password', 255);
-    if (!$name || !$surname || mb_strlen($password) < 8) throw new DomainException('Complete nombre, apellido y contraseña de mínimo 8 caracteres.');
+    if (!$name || !$surname) throw new DomainException('Complete nombre y apellido.');
+    assert_password_policy($password);
     if (q('SELECT id FROM usuarios WHERE correo=?', [$email])->fetch()) throw new DomainException('No se pudo completar el registro con ese correo.');
     q('INSERT INTO usuarios(rol_id,nombre,apellido,correo,password_hash,password_version) VALUES(2,?,?,?,?,1)',
       [$name,$surname,$email,password_hash($password, PASSWORD_DEFAULT)]);
@@ -58,8 +59,7 @@ function change_initial_password(): void {
     if (!(int)$user['debe_cambiar_password']) go('home');
     $password = input('new_password', 255);
     $confirmation = input('confirm_password', 255);
-    if (mb_strlen($password, 'UTF-8') < 8 || strlen($password) > 72)
-        throw new DomainException('La contraseña debe tener al menos 8 caracteres y no superar 72 bytes.');
+    assert_password_policy($password);
     if ($password !== $confirmation) throw new DomainException('Las contraseñas no coinciden.');
     foreach (require __DIR__ . '/demo-accounts.php' as $account) {
         if (hash_equals($account[4], $password)) throw new DomainException('Elija una contraseña personal distinta de las claves iniciales públicas.');
@@ -190,8 +190,7 @@ function add_review(array $user): void {
 // Admin Centers: gestión de cuentas por parte del administrador.
 // ---------------------------------------------------------------------------
 function valid_temporary_password(string $password, string $confirmation): string {
-    if (mb_strlen($password, 'UTF-8') < 8 || strlen($password) > 72)
-        throw new DomainException('La contraseña temporal debe tener al menos 8 caracteres y no superar 72 bytes.');
+    assert_password_policy($password, 'La contraseña temporal');
     if ($password !== $confirmation) throw new DomainException('Las contraseñas temporales no coinciden.');
     foreach (require __DIR__ . '/demo-accounts.php' as $account) {
         if (hash_equals($account[4], $password))

@@ -51,7 +51,7 @@ Inicia Apache y MySQL. Usa estas rutas según tu sistema:
 | CLIENTE | `cliente@netlinks.pa` | `NetlinksCliente2026!` |
 | CLIENTE adicional | `otro@netlinks.pa` | `NetlinksOtro2026!` |
 
-Al ingresar debes cambiar la clave antes de usar el sistema: mínimo 8 caracteres, máximo 72 bytes y confirmación. La temporal deja de funcionar después del cambio. **Estas cuentas públicas son solo para desarrollo local, no para producción.** Nunca publiques `.env`, contraseñas personales ni respaldos. El enunciado prohíbe publicar contraseñas: consulta con el docente esta variante de demostración.
+Al ingresar debes cambiar la clave antes de usar el sistema: mínimo 12 caracteres, al menos una mayúscula, una minúscula, un número y un carácter especial, máximo 72 bytes y confirmación. La temporal deja de funcionar después del cambio. **Estas cuentas públicas son solo para desarrollo local, no para producción.** Nunca publiques `.env`, contraseñas personales ni respaldos. El enunciado prohíbe publicar contraseñas: consulta con el docente esta variante de demostración.
 
 ## Qué incluye
 

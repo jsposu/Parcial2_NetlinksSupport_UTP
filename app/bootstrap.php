@@ -84,6 +84,23 @@ function valid_email(string $email): string {
     if (strlen($email) > 190 || !filter_var($email, FILTER_VALIDATE_EMAIL)) throw new DomainException('Correo inválido.');
     return $email;
 }
+// Política única de contraseñas para todos los roles y claves temporales.
+const PASSWORD_MIN_LENGTH = 12;
+const PASSWORD_MAX_BYTES = 72;
+function password_policy_errors(string $password): array {
+    $errors = [];
+    if (mb_strlen($password, 'UTF-8') < PASSWORD_MIN_LENGTH) $errors[] = 'mínimo ' . PASSWORD_MIN_LENGTH . ' caracteres';
+    if (strlen($password) > PASSWORD_MAX_BYTES) $errors[] = 'máximo ' . PASSWORD_MAX_BYTES . ' bytes';
+    if (!preg_match('/\p{Lu}/u', $password)) $errors[] = 'al menos una letra mayúscula';
+    if (!preg_match('/\p{Ll}/u', $password)) $errors[] = 'al menos una letra minúscula';
+    if (!preg_match('/\p{N}/u', $password)) $errors[] = 'al menos un número';
+    if (!preg_match('/[^\p{L}\p{N}\s]/u', $password)) $errors[] = 'al menos un carácter especial';
+    return $errors;
+}
+function assert_password_policy(string $password, string $label = 'La contraseña'): void {
+    $errors = password_policy_errors($password);
+    if ($errors) throw new DomainException($label . ' no cumple la política de seguridad: ' . implode('; ', $errors) . '.');
+}
 function valid_slot(string $date, string $start, string $end): void {
     $a = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $date . ' ' . $start);
     $b = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $date . ' ' . $end);

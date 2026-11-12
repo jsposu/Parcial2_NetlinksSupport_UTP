@@ -18,10 +18,10 @@ $accounts = q("SELECT u.id,u.nombre,u.apellido,u.correo,u.estado,u.debe_cambiar_
 <label>Correo electrónico<input required type="email" name="correo" maxlength="190" autocomplete="off"></label>
 <label>Rol<select name="rol_id"><option value="2">Cliente</option><option value="1">Administrador</option></select></label>
 <div class="form-grid">
-<label>Contraseña temporal<input required type="password" name="password" minlength="8" autocomplete="new-password"></label>
-<label>Repetir contraseña<input required type="password" name="password_confirm" minlength="8" autocomplete="new-password"></label>
+<label>Contraseña temporal<input required type="password" name="password" minlength="12" autocomplete="new-password"></label>
+<label>Repetir contraseña<input required type="password" name="password_confirm" minlength="12" autocomplete="new-password"></label>
 </div>
-<p class="small">La persona deberá cambiar esta contraseña en su primer ingreso.</p>
+<p class="small">Mínimo 12 caracteres con mayúscula, minúscula, número y carácter especial. La persona deberá cambiar esta contraseña en su primer ingreso.</p>
 <button class="button full" type="submit">Crear cuenta</button>
 </form>
 </section>
@@ -62,8 +62,8 @@ $accounts = q("SELECT u.id,u.nombre,u.apellido,u.correo,u.estado,u.debe_cambiar_
 </form>
 <?php endif; ?>
 <form class="user-inline" method="post" action="<?= url('admin-user-password') ?>"><?= csrf_field() ?><input type="hidden" name="id" value="<?= e($account['id']) ?>">
-<input type="password" name="password" placeholder="Contraseña temporal" minlength="8" required autocomplete="new-password" aria-label="Nueva contraseña temporal para <?= e($account['nombre']) ?>">
-<input type="password" name="password_confirm" placeholder="Repetir" minlength="8" required autocomplete="new-password" aria-label="Repetir la contraseña temporal">
+<input type="password" name="password" placeholder="Contraseña temporal" minlength="12" required autocomplete="new-password" aria-label="Nueva contraseña temporal para <?= e($account['nombre']) ?>">
+<input type="password" name="password_confirm" placeholder="Repetir" minlength="12" required autocomplete="new-password" aria-label="Repetir la contraseña temporal">
 <button class="button-outline small-button" type="submit">Restablecer clave</button>
 </form>
 <?php if (!$isSelf): ?>

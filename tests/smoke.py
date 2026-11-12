@@ -14,7 +14,7 @@ import urllib.parse
 import urllib.request
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else 'http://127.0.0.1:8000/').rstrip('/') + '/'
-password = secrets.token_hex(16)
+password = 'Nl!' + secrets.token_hex(12) + 'A9'
 
 
 class Browser:
@@ -58,6 +58,9 @@ assert anonymous.get('home', q="' OR 1=1 --")[0] == 200
 assert anonymous.post('login', {'correo': 'x\' OR 1=1 --', 'password': 'x', 'csrf': anonymous.csrf()})[0] != 200
 fresh = Browser()
 fresh_email = 'nuevo_' + __import__('secrets').token_hex(5) + '@example.test'
+weak = Browser()
+assert weak.post('register', {'csrf': weak.csrf(), 'nombre': 'Clave', 'apellido': 'Débil',
+    'correo': 'debil_' + secrets.token_hex(5) + '@example.test', 'password': 'Abcdef12345'})[0] == 422
 assert fresh.post('register', {'csrf': fresh.csrf(), 'nombre': 'Nuevo', 'apellido': 'Cliente',
     'correo': fresh_email, 'password': password})[0] == 200
 fresh.login(fresh_email)
@@ -78,7 +81,10 @@ for browser, email, initial in [
     stale = Browser()
     assert 'Cambia tu contraseña' in stale.post('login', {'csrf': stale.csrf(), 'correo': email, 'password': initial})[1]
     assert browser.post('change-password', {'csrf': 'incorrecto', 'new_password': password, 'confirm_password': password})[0] == 403
-    for new, confirm in [('corta', 'corta'), (password, 'no coincide'), (initial, initial), ('ñ' * 40, 'ñ' * 40)]:
+    for new, confirm in [('corta', 'corta'), ('Abcdef12345', 'Abcdef12345'), ('abcdef123456!', 'abcdef123456!'),
+                         ('ABCDEF123456!', 'ABCDEF123456!'), ('Abcdefghijkl!', 'Abcdefghijkl!'),
+                         ('Abcdefgh12345', 'Abcdefgh12345'), (password, 'no coincide'),
+                         (initial, initial), ('ñ' * 40, 'ñ' * 40)]:
         assert browser.post('change-password', {'csrf': browser.csrf(), 'new_password': new, 'confirm_password': confirm})[0] == 422
     status, html, _ = browser.post('change-password', {'csrf': browser.csrf(), 'new_password': password, 'confirm_password': password})
     assert status == 200 and 'Cambia tu contraseña' not in html
