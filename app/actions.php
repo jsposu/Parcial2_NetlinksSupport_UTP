@@ -13,18 +13,38 @@ function register_user(): void {
 function login_user(): void {
     $email = valid_email(input('correo', 190)); $password = input('password', 255);
     $key = hash('sha256', $email . '|' . ($_SERVER['REMOTE_ADDR'] ?? 'local'));
-    $attempt = q('SELECT fallos,bloqueado_hasta FROM intentos_login WHERE clave=?', [$key])->fetch();
-    if ($attempt && $attempt['bloqueado_hasta'] && strtotime($attempt['bloqueado_hasta']) > time())
-        throw new DomainException('Demasiados intentos. Espere 15 minutos y pruebe de nuevo.');
-    $user = q('SELECT id,password_hash,debe_cambiar_password,password_version FROM usuarios WHERE correo=? AND estado=\'ACTIVO\'', [$email])->fetch();
+    $user = q('SELECT id,password_hash,debe_cambiar_password,password_version,estado,intentos_fallidos,bloqueado_hasta FROM usuarios WHERE correo=?', [$email])->fetch();
+    // Cuentas existentes: el bloqueo es por usuario (global). Correos desconocidos:
+    // se conserva el límite por correo + IP para no filtrar si la cuenta existe.
+    if ($user) {
+        if ($user['bloqueado_hasta'] && strtotime($user['bloqueado_hasta']) > time())
+            throw new DomainException('Demasiados intentos. Espere 15 minutos y pruebe de nuevo.');
+    } else {
+        $attempt = q('SELECT fallos,bloqueado_hasta FROM intentos_login WHERE clave=?', [$key])->fetch();
+        if ($attempt && $attempt['bloqueado_hasta'] && strtotime($attempt['bloqueado_hasta']) > time())
+            throw new DomainException('Demasiados intentos. Espere 15 minutos y pruebe de nuevo.');
+    }
     // Evita revelar mediante el mensaje si existe el correo.
     $dummy = '$2y$10$05YwBGV4qNzGNdYS51mc6eHTPnb6p7v7dW.MCLZRBlqFkFYOmMuBq';
-    if (!password_verify($password, $user['password_hash'] ?? $dummy)) {
-        q("INSERT INTO intentos_login(clave,fallos,bloqueado_hasta) VALUES(?,1,NULL)
-           ON DUPLICATE KEY UPDATE fallos=IF(bloqueado_hasta IS NOT NULL AND bloqueado_hasta<=NOW(),1,LEAST(fallos+1,255)),
-           bloqueado_hasta=IF(fallos>=5,DATE_ADD(NOW(), INTERVAL 15 MINUTE),NULL)", [$key]);
+    $valid = password_verify($password, $user['password_hash'] ?? $dummy);
+    if (!$valid || !$user || $user['estado'] !== 'ACTIVO') {
+        if ($user && $user['estado'] === 'ACTIVO') {
+            // Contador visible en Admin Centers; se reinicia al iniciar sesión.
+            $failures = (int)$user['intentos_fallidos'];
+            if ($user['bloqueado_hasta'] && strtotime($user['bloqueado_hasta']) <= time()) $failures = 0;
+            $failures = min($failures + 1, 255);
+            if ($failures >= 5)
+                q('UPDATE usuarios SET intentos_fallidos=?,bloqueado_hasta=DATE_ADD(NOW(), INTERVAL 15 MINUTE) WHERE id=?', [$failures,$user['id']]);
+            else
+                q('UPDATE usuarios SET intentos_fallidos=?,bloqueado_hasta=NULL WHERE id=?', [$failures,$user['id']]);
+        } elseif (!$user) {
+            q("INSERT INTO intentos_login(clave,fallos,bloqueado_hasta) VALUES(?,1,NULL)
+               ON DUPLICATE KEY UPDATE fallos=IF(bloqueado_hasta IS NOT NULL AND bloqueado_hasta<=NOW(),1,LEAST(fallos+1,255)),
+               bloqueado_hasta=IF(fallos>=5,DATE_ADD(NOW(), INTERVAL 15 MINUTE),NULL)", [$key]);
+        }
         throw new DomainException('Credenciales inválidas. Tras cinco intentos fallidos se bloquea el acceso durante 15 minutos.');
     }
+    q('UPDATE usuarios SET intentos_fallidos=0,bloqueado_hasta=NULL WHERE id=?', [$user['id']]);
     q('DELETE FROM intentos_login WHERE clave=?', [$key]);
     session_regenerate_id(true); $_SESSION['uid'] = $user['id'];
     $_SESSION['password_version'] = (int)$user['password_version'];
@@ -164,4 +184,83 @@ function add_review(array $user): void {
     if (q('SELECT id FROM resenas WHERE reserva_id=?', [$id])->fetch()) throw new DomainException('Esta reserva ya tiene una reseña.');
     q('INSERT INTO resenas(reserva_id,cliente_id,calificacion,comentario) VALUES(?,?,?,?)', [$id,$user['id'],$score,$comment]);
     notice('Gracias por su reseña.'); go('reservas');
+}
+
+// ---------------------------------------------------------------------------
+// Admin Centers: gestión de cuentas por parte del administrador.
+// ---------------------------------------------------------------------------
+function valid_temporary_password(string $password, string $confirmation): string {
+    if (mb_strlen($password, 'UTF-8') < 8 || strlen($password) > 72)
+        throw new DomainException('La contraseña temporal debe tener al menos 8 caracteres y no superar 72 bytes.');
+    if ($password !== $confirmation) throw new DomainException('Las contraseñas temporales no coinciden.');
+    foreach (require __DIR__ . '/demo-accounts.php' as $account) {
+        if (hash_equals($account[4], $password))
+            throw new DomainException('Elija una contraseña temporal distinta de las claves iniciales públicas.');
+    }
+    return $password;
+}
+function assert_other_active_admin(int $id): void {
+    $others = q("SELECT COUNT(*) FROM usuarios WHERE rol_id=1 AND estado='ACTIVO' AND id<>?", [$id])->fetchColumn();
+    if (!$others) throw new DomainException('Debe quedar al menos un administrador activo.');
+}
+function create_user_account(): void {
+    must_login(1);
+    $name = input('nombre', 80); $surname = input('apellido', 80);
+    $email = valid_email(input('correo', 190));
+    $role = (int)input('rol_id', 1);
+    $password = valid_temporary_password(input('password', 255), input('password_confirm', 255));
+    if (!$name || !$surname) throw new DomainException('Complete nombre y apellido.');
+    if (!in_array($role, [1,2], true)) throw new DomainException('Rol inválido.');
+    if (q('SELECT id FROM usuarios WHERE correo=?', [$email])->fetch())
+        throw new DomainException('No se pudo crear la cuenta con ese correo.');
+    q('INSERT INTO usuarios(rol_id,nombre,apellido,correo,password_hash,debe_cambiar_password,password_version) VALUES(?,?,?,?,?,1,1)',
+      [$role,$name,$surname,$email,password_hash($password, PASSWORD_DEFAULT)]);
+    notice('Cuenta creada. La persona deberá cambiar la contraseña temporal al ingresar.');
+    go('admin-centers');
+}
+function update_user_role(): void {
+    $admin = must_login(1);
+    $id = positive($_POST['id'] ?? null);
+    $role = (int)input('rol_id', 1);
+    if (!in_array($role, [1,2], true)) throw new DomainException('Rol inválido.');
+    if ($id === (int)$admin['id']) throw new DomainException('No puede cambiar su propio rol.');
+    $target = q('SELECT id,rol_id FROM usuarios WHERE id=?', [$id])->fetch();
+    if (!$target) throw new DomainException('Usuario no encontrado.');
+    if ((int)$target['rol_id'] === $role) { notice('El rol no cambió.'); go('admin-centers'); }
+    if ($role === 2) assert_other_active_admin($id);
+    q('UPDATE usuarios SET rol_id=? WHERE id=?', [$role,$id]);
+    notice('Permisos actualizados.');
+    go('admin-centers');
+}
+function toggle_user_status(): void {
+    $admin = must_login(1);
+    $id = positive($_POST['id'] ?? null);
+    if ($id === (int)$admin['id']) throw new DomainException('No puede deshabilitar su propia cuenta.');
+    $target = q('SELECT id,estado FROM usuarios WHERE id=?', [$id])->fetch();
+    if (!$target) throw new DomainException('Usuario no encontrado.');
+    $next = $target['estado'] === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+    if ($next === 'INACTIVO') assert_other_active_admin($id);
+    // Al deshabilitar se invalidan las sesiones abiertas de esa cuenta.
+    q('UPDATE usuarios SET estado=?,password_version=password_version+1 WHERE id=?', [$next,$id]);
+    notice($next === 'ACTIVO' ? 'Cuenta habilitada.' : 'Cuenta deshabilitada y sesiones cerradas.');
+    go('admin-centers');
+}
+function unlock_user_account(): void {
+    must_login(1);
+    $id = positive($_POST['id'] ?? null);
+    if (!q('SELECT id FROM usuarios WHERE id=?', [$id])->fetch()) throw new DomainException('Usuario no encontrado.');
+    q('UPDATE usuarios SET intentos_fallidos=0,bloqueado_hasta=NULL WHERE id=?', [$id]);
+    notice('Cuenta desbloqueada. Ya puede iniciar sesión.');
+    go('admin-centers');
+}
+function reset_user_password(): void {
+    must_login(1);
+    $id = positive($_POST['id'] ?? null);
+    if (!q('SELECT id FROM usuarios WHERE id=?', [$id])->fetch()) throw new DomainException('Usuario no encontrado.');
+    $password = valid_temporary_password(input('password', 255), input('password_confirm', 255));
+    // Se invalida cualquier sesión abierta y se exige cambiarla al ingresar.
+    q('UPDATE usuarios SET password_hash=?,debe_cambiar_password=1,password_version=password_version+1,intentos_fallidos=0,bloqueado_hasta=NULL WHERE id=?',
+      [password_hash($password, PASSWORD_DEFAULT),$id]);
+    notice('Contraseña temporal asignada. La persona deberá cambiarla al ingresar.');
+    go('admin-centers');
 }

@@ -25,6 +25,11 @@ try {
                 session_destroy(); go('home');
             case 'admin-save': save_entity(input('entity', 20)); break;
             case 'admin-toggle': toggle_entity(input('entity', 20)); break;
+            case 'admin-user-create': create_user_account(); break;
+            case 'admin-user-role': update_user_role(); break;
+            case 'admin-user-status': toggle_user_status(); break;
+            case 'admin-user-unlock': unlock_user_account(); break;
+            case 'admin-user-password': reset_user_password(); break;
             case 'book': book_slot(must_login(2)); break;
             case 'cancel': change_booking(must_login(2), false); break;
             case 'admin-status': change_booking(must_login(1), true); break;
@@ -37,6 +42,7 @@ try {
         'home' => 'home', 'login' => 'login', 'register' => 'register',
         'service' => 'service', 'reservas' => 'reservas',
         'admin' => 'admin', 'admin-reservas' => 'admin-reservas',
+        'admin-centers' => 'admin-centers',
         'change-password' => 'change-password',
         default => null,
     };
@@ -45,7 +51,7 @@ try {
         if (!$user) go('login');
         if (!(int)$user['debe_cambiar_password']) go('home');
     }
-    if (in_array($route, ['admin','admin-reservas'], true)) $user = must_login(1);
+    if (in_array($route, ['admin','admin-reservas','admin-centers'], true)) $user = must_login(1);
     if ($route === 'reservas') $user = must_login(2);
     require dirname(__DIR__) . '/views/layout-top.php';
     require dirname(__DIR__) . '/views/' . $template . '.php';
