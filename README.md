@@ -56,7 +56,7 @@ Al ingresar debes cambiar la clave antes de usar el sistema: mínimo 12 caracter
 ## Qué incluye
 
 - Catálogo con búsqueda, categorías, seis servicios y horarios futuros.
-- ADMIN: mantenimiento de categorías, servicios y horarios; confirmación, atención y cancelación de reservas; **Admin Centers** para crear cuentas, cambiar roles, restablecer contraseñas temporales, ver intentos fallidos y bloquear/desbloquear accesos.
+- ADMIN: mantenimiento de categorías, servicios y horarios; confirmación, atención y cancelación de reservas; **Administración de Usuarios** para crear cuentas, cambiar roles, restablecer contraseñas temporales, ver intentos fallidos y bloquear/desbloquear accesos.
 - CLIENTE: registro, reservas propias, cancelaciones y reseñas de atenciones realizadas.
 - Cupos transaccionales, permisos PHP, hashes, CSRF, PDO preparado, salida codificada y bloqueo de login.
 

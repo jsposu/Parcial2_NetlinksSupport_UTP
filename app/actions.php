@@ -30,7 +30,7 @@ function login_user(): void {
     $valid = password_verify($password, $user['password_hash'] ?? $dummy);
     if (!$valid || !$user || $user['estado'] !== 'ACTIVO') {
         if ($user && $user['estado'] === 'ACTIVO') {
-            // Contador visible en Admin Centers; se reinicia al iniciar sesión.
+            // Contador visible en Administración de Usuarios; se reinicia al iniciar sesión.
             $failures = (int)$user['intentos_fallidos'];
             if ($user['bloqueado_hasta'] && strtotime($user['bloqueado_hasta']) <= time()) $failures = 0;
             $failures = min($failures + 1, 255);
@@ -187,7 +187,7 @@ function add_review(array $user): void {
 }
 
 // ---------------------------------------------------------------------------
-// Admin Centers: gestión de cuentas por parte del administrador.
+// Administración de Usuarios: gestión de cuentas por parte del administrador.
 // ---------------------------------------------------------------------------
 function valid_temporary_password(string $password, string $confirmation): string {
     assert_password_policy($password, 'La contraseña temporal');

@@ -5,7 +5,7 @@ $accounts = q("SELECT u.id,u.nombre,u.apellido,u.correo,u.estado,u.debe_cambiar_
     ORDER BY (u.rol_id=1) DESC, u.nombre, u.apellido")->fetchAll();
 ?>
 <main class="container section">
-<span class="eyebrow">ADMIN CENTERS</span><h1>Cuentas y accesos</h1>
+<span class="eyebrow">ADMINISTRACIÓN DE USUARIOS</span><h1>Cuentas y accesos</h1>
 <p class="lead">Crea cuentas, ajusta permisos, restablece contraseñas y desbloquea accesos.</p>
 <div class="admin-grid">
 <section class="panel">

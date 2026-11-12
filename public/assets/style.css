@@ -90,8 +90,11 @@ body,.site-header,.site-footer,.card,.panel,.booking,.slot,.review,.admin-item,.
 @media(prefers-reduced-motion:reduce){.theme-toggle-track,.theme-toggle-thumb,body,.site-header,.site-footer,.card,.panel,.booking,.slot,.review,.admin-item,.filters,.tabs a,.empty,.button-outline,input,select,textarea{transition:none}}
 
 /* ==========================================================================
-   Admin Centers · gestión de cuentas
+   Administración de Usuarios · gestión de cuentas
    ========================================================================== */
+/* Alinea los recuadros de un .form-grid cuando sus etiquetas ocupan distinto número de líneas. */
+.form-grid > label{display:grid;grid-template-rows:1fr auto}
+
 .user-card{background:var(--white);border:1px solid var(--line);border-radius:15px;padding:18px;margin-bottom:12px}
 .user-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap}
 .user-head h3{margin:10px 0 2px}
