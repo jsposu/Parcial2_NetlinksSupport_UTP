@@ -16,7 +16,7 @@ foreach ($files as $part) {
     $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS));
     foreach ($iterator as $item) {
         if (!$item->isFile()) continue;
-        $relative = substr($item->getPathname(), strlen($root) + 1);
+        $relative = str_replace('\\', '/', substr($item->getPathname(), strlen($root) + 1));
         if (str_contains($relative, '__pycache__')) continue;
         $zip->addFile($item->getPathname(), $relative);
     }

@@ -4,6 +4,8 @@
 
 Reservas de soporte técnico con PHP 8.2+, MySQL/MariaDB y diseño adaptable. Proyecto de Desarrollo Web · UTP · **JHOP**: Joseph Gantes, Henry Ramirez, Omar Herrera y Paul Zerpa.
 
+**Repositorio:** <https://github.com/jsposu/Parcial2_NetlinksSupport_UTP> (rama `master`). Entrega: `entrega/PW2026_JHOP_BookGoLite.zip`, informe en `docs/Informe.pdf` y evidencias en `security/evidencias/`.
+
 ## Instalar — recomendado
 
 Necesitas **XAMPP instalado**, Apache/MySQL iniciados y **Python 3.9+**. Descarga o clona este repositorio **fuera de `htdocs`**, abre una terminal en él y ejecuta:
@@ -65,9 +67,23 @@ Al ingresar debes cambiar la clave antes de usar el sistema: mínimo 12 caracter
 ## Documentación y pruebas
 
 - [Instalador y recuperación](docs/INSTALACION.md) · [Arquitectura](docs/ARQUITECTURA.md) · [Pruebas de seguridad](security/SECURITY.md).
+- [Evidencias reales](security/evidencias/README.md): capturas de las siete pruebas, del flujo completo de reserva y de los módulos; cabeceras HTTP y salidas de pruebas del **12/11/2026**.
 - Pruebas del instalador: `python3 -m unittest discover -s tests -p "test_installer.py"`.
 - Flujo web sobre una **base local recién importada e inicializada**: `python3 tests/smoke.py http://localhost/Parcial2DesarrolloWeb/public/` (cambia claves de demo y crea reservas).
-- Informe: `docs/Informe.html` y `docs/Informe.pdf`. Capturas de seguridad y reflexiones individuales pendientes del equipo.
-- Empaquetar: `php bin/package.php` → `entrega/PW2026_JHOP_BookGoLite.zip`, sin credenciales privadas.
+- Informe: `docs/Informe.pdf` (fuente en `docs/Informe.html`) con portada, integrantes, negocio, diagrama entidad-relación, módulos, capturas, seguridad, distribución del trabajo y reflexión individual.
+- Empaquetar: `php bin/package.php` → `entrega/PW2026_JHOP_BookGoLite.zip`, sin credenciales privadas. Si `ZipArchive` no está habilitado, usa `php -d extension=zip bin/package.php`.
+
+## Repositorio y contribuciones
+
+Historial en `master` (7 commits de desarrollo, 2 autores registrados; el commit de entrega añade informe y evidencias). Verificación: `git log --oneline` y `git shortlog -sn --all`.
+
+| Integrante | Aporte | Commits |
+| --- | --- | --- |
+| Joseph Gantes | Instalador para XAMPP, documentación y ajustes de interfaz | `b62cec9`, `309d664`, `37de458` |
+| Paul Zerpa | Identidad, contraseñas temporales y cambio obligatorio | `6ec662a`, `eb20135` (registrados con la cuenta `jsposu`) |
+| Omar Herrera | Modo oscuro y Administración de Usuarios | `e86981e`, `6804c7c` |
+| Henry Ramirez | Catálogo, datos de ejemplo y verificación manual de reglas de negocio | Sin commits propios; aporte consignado por el equipo |
+
+La atribución de los commits de la cuenta `jsposu` a Joseph Gantes y Paul Zerpa, y el aporte de Henry Ramirez, los confirma el equipo en la sustentación.
 
 **Uso de IA:** El equipo utilizó OpenCode con varios modelos como apoyo para desarrollar la estructura principal del código. Las ideas, los requisitos y la información del proyecto se proporcionaron manualmente a la IA. El equipo revisó y probó el código de este repositorio y asume la responsabilidad por cada línea de código entregada.

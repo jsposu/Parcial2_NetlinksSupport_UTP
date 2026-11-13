@@ -1,22 +1,201 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Informe · Netlinks · Book&Go Lite</title>
-<style>@page{size:A4;margin:17mm}body{font:11pt/1.45 Arial,sans-serif;color:#193546}h1,h2{color:#126c6b}h1{font-size:27pt}h2{font-size:15pt;border-bottom:2px solid #d7efea;padding-bottom:5px;margin-top:24px}h3{font-size:12pt}.cover{min-height:90vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}.cover .mark{background:#d5f17a;padding:13px 18px;border-radius:14px;font-size:36pt;color:#122b3b}.cover p{max-width:460px}.muted{color:#57717b}.break{break-before:page}table{width:100%;border-collapse:collapse;font-size:10pt;margin:10px 0}td,th{padding:8px;border:1px solid #cddfdd;text-align:left;vertical-align:top}th{background:#d7efea}.diagram{font-family:monospace;white-space:pre;line-height:1.6;background:#f2f8f6;border:1px solid #dce6e5;padding:14px;font-size:9pt;overflow:hidden}.notice{border-left:4px solid #126c6b;padding:8px 13px;background:#f2f8f6}ul{padding-left:20px}li{margin-bottom:5px}</style></head><body>
-<section class="cover"><div class="mark">✳</div><p>UNIVERSIDAD TECNOLÓGICA DE PANAMÁ<br>Facultad de Ingeniería en Sistemas Computacionales<br>Desarrollo Web · Proyecto Parcial 2 · 2026</p><h1>Netlinks</h1><h2>Book&Go Lite — Gestor de Citas con Reseñas</h2><p>Soporte técnico: computadoras, redes, software y seguridad.</p><p><strong>Joseph Gantes · Henry Ramirez<br>Omar Herrera · Paul Zerpa</strong></p><p class="muted">Docente: Giovani Sánchez · Entrega: 12 de noviembre de 2026</p></section>
-<h2>1. Negocio elegido y módulos</h2><p>Netlinks organiza citas de soporte técnico. Un cliente encuentra servicios, consulta horarios, reserva, cancela cuando procede y reseña atenciones realizadas. El administrador mantiene categorías, servicios y horarios, y gestiona las reservas. El catálogo incluye tres categorías y seis servicios de ejemplo con precios, duraciones y horarios. El diseño adaptable utiliza CSS propio, sin plantilla externa, y funciona sin servicios de Internet.</p>
-<h2>2. Modelo entidad–relación</h2><div class="diagram">roles (1) ─── (N) usuarios (1) ─── (N) reservas (N) ─── (1) horarios
-                        │                        │                       │
-                        │                        │                       │
-                        └── (N) resenas (N) ─────┘                       │
-                                 (por reserva única)                    │
-categorias (1) ─── (N) servicios (1) ─── (N) horarios ───────────────────┘
-                         │
-                         └── (1) reservas (servicio_id,horario_id comprobados con FK)
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<title>Informe — Netlinks — Book&amp;Go Lite</title>
+<style>
+@page{size:A4;margin:16mm}
+*{box-sizing:border-box}
+body{font:10.5pt/1.45 Arial,Helvetica,sans-serif;color:#193546;margin:0}
+h1,h2,h3{color:#126c6b;line-height:1.2}
+h1{font-size:26pt;margin:6px 0}
+h2{font-size:14.5pt;border-bottom:2px solid #d7efea;padding-bottom:5px;margin:26px 0 10px}
+h3{font-size:11.5pt;margin:16px 0 6px}
+p{margin:7px 0}
+ul,ol{padding-left:20px;margin:7px 0}
+li{margin-bottom:4px}
+code{font-family:Consolas,"Courier New",monospace;background:#f0f6f4;padding:1px 4px;border-radius:3px;font-size:9.5pt}
+.cover{min-height:250mm;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.cover .mark{background:#d5f17a;padding:12px 20px;border-radius:14px;font-size:34pt;color:#122b3b;line-height:1}
+.cover p{max-width:150mm}
+.cover .meta{font-size:9.5pt;color:#57717b;margin-top:18px}
+.muted{color:#57717b}
+.break{break-before:page}
+table{width:100%;border-collapse:collapse;font-size:9pt;margin:10px 0}
+td,th{padding:6px 7px;border:1px solid #cddfdd;text-align:left;vertical-align:top}
+th{background:#d7efea}
+tr:nth-child(even) td{background:#f7fbfa}
+.diagram{font-family:Consolas,"Courier New",monospace;white-space:pre;line-height:1.5;background:#f2f8f6;border:1px solid #dce6e5;padding:12px;font-size:8.6pt;overflow:hidden}
+.notice{border-left:4px solid #126c6b;padding:8px 12px;background:#f2f8f6;margin:10px 0}
+.warn{border-left:4px solid #b45309;padding:8px 12px;background:#fff7ed;margin:10px 0}
+figure{margin:10px 0 14px;break-inside:avoid}
+figure img{width:100%;border:1px solid #cddfdd;border-radius:6px;display:block}
+figcaption{font-size:8.6pt;color:#57717b;margin-top:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid2 figure{margin:0}
+pre{background:#0f2b35;color:#d7efea;padding:10px 12px;border-radius:6px;font-size:8.4pt;overflow:hidden;white-space:pre-wrap}
+.kv{font-size:9.5pt}
+.tag{display:inline-block;background:#d7efea;color:#126c6b;border-radius:999px;padding:1px 8px;font-size:8pt;font-weight:bold}
+.ok{color:#0f7a4a;font-weight:bold}
+.small{font-size:8.8pt;color:#57717b}
+</style></head><body>
 
-intentos_login: tabla auxiliar de bloqueo; clave SHA-256 de correo/IP, contador y vencimiento.</div>
-<p>Las claves primarias identifican cada fila. `usuarios.correo` es único. `reservas(horario_id,servicio_id)` referencia `horarios(id,servicio_id)` y evita que una cita apunte a un servicio incorrecto. `resenas(reserva_id,cliente_id)` referencia `reservas(id,cliente_id)`, y la unicidad de `reserva_id` limita a una reseña por reserva. La columna generada `cliente_activo` deja NULL para canceladas y su índice único con `horario_id` evita reservas activas duplicadas. Las restricciones CHECK limitan precios, duraciones, horarios, cupos y calificación.</p>
-<h2>3. Flujo y controles</h2><table><tr><th>Módulo</th><th>Funcionamiento</th></tr><tr><td>Identidad</td><td>Registro público solo CLIENTE; ADMIN de demostración mediante CLI local; sesiones regeneradas y roles revisados en cada petición.</td></tr><tr><td>Catálogo</td><td>Filtros por nombre/categoría; detalle con horarios futuros y reseñas; CRUD ADMIN con desactivación lógica.</td></tr><tr><td>Reservas</td><td>Transacción: bloqueo de horario, comprobación de servicio/cupos/duplicados, decremento condicionado e INSERT. Cancelación: transacción, transición única y devolución de un cupo.</td></tr><tr><td>Reseñas</td><td>Única por reserva propia REALIZADA, con puntuación 1–5; salida codificada en el detalle.</td></tr></table>
-<h2>4. Seguridad</h2><p>Contraseñas con `password_hash` / `password_verify`, longitud mínima de ocho caracteres; sesiones con cookie HttpOnly, SameSite y Secure cuando hay HTTPS; bloqueo temporal tras cinco fallos. PDO y parámetros preparados, salida HTML codificada, CSRF en todos los POST, autorización por rol y propietario, cabeceras CSP / `nosniff` / DENY, errores sin SQL en la respuesta. El detalle y el guion de comprobación figuran en `security/SECURITY.md`.</p>
-<div class="notice"><strong>Evidencias pendientes del equipo:</strong> insertar aquí las capturas reales de navegación, CRUD, transiciones de reserva y las siete pruebas de seguridad. Anotar fecha, entorno, pasos y resultado observado. No sustituir esta sección por afirmaciones sin pruebas.</div>
-<h2>5. Instalación y entrega</h2><p>La forma recomendada es ejecutar <strong>instalar.py</strong> con Python 3.9+ desde una copia fuera de htdocs. Detecta XAMPP en Windows, Linux y macOS, pide una confirmación y prepara <strong>bookgo_lite</strong> usando el MySQL/MariaDB incluido en XAMPP. Solo solicita la contraseña MySQL si falla la autenticación normal. Crea la base si no existe, conserva las existentes compatibles, copia el proyecto e inicializa las cuentas. No borra bases ni crea respaldos o carpetas de recuperación. El script muestra la URL e intenta abrir el navegador; bajo sudo no ejecuta un navegador como root. Las instrucciones manuales se conservan en README. Una importación o copia fallida puede quedar incompleta; se debe revisar y reintentar sin eliminar datos automáticamente. El primer acceso exige cambiar la clave temporal; las claves personales solo se guardan como hashes. <strong>Advertencia:</strong> las claves públicas de arranque solo son para desarrollo local y discrepan de la prohibición del enunciado de publicar contraseñas; consultar al docente y no usarlas en producción. Grupo: <strong>JHOP</strong> (Joseph, Henry, Omar y Paul). ZIP: <strong>PW2026_JHOP_BookGoLite.zip</strong>, con instalador y sin credenciales privadas.</p>
-<h2 class="break">6. Distribución de trabajo y reflexión individual</h2><p class="notice">El reparto siguiente es <strong>propuesto, no una declaración de contribuciones comprobadas</strong>. Cada integrante debe confirmar lo que realizó, sus commits y su reflexión antes de la entrega.</p><table><tr><th>Integrante</th><th>Responsabilidad propuesta</th><th>Trabajo real / commits (por completar)</th></tr><tr><td>Joseph Gantes</td><td>Autenticación, sesiones, CSRF</td><td>Pendiente de consignar por Joseph.</td></tr><tr><td>Henry Ramirez</td><td>Catálogo, categorías y servicios</td><td>Pendiente de consignar por Henry.</td></tr><tr><td>Omar Herrera</td><td>Horarios, reservas y cupos</td><td>Pendiente de consignar por Omar.</td></tr><tr><td>Paul Zerpa</td><td>Reseñas, interfaz y pruebas</td><td>Pendiente de consignar por Paul.</td></tr></table><p><strong>Reflexiones:</strong> Joseph: pendiente. Henry: pendiente. Omar: pendiente. Paul: pendiente.</p>
-<h2>7. Repositorio y uso de IA</h2><p><strong>Repositorio GitHub y contribuciones:</strong> pendiente de incorporar la URL real y capturas del historial compartido; no se inventan aportes. <strong>Herramienta de IA empleada:</strong> OpenCode para plantear la estructura y generar una primera implementación de código y documentación. El equipo debe consignar las consultas pertinentes, fragmentos incorporados, modificaciones y pruebas hechas por ellos, verificar cada módulo y poder defenderlo. El enunciado no permite presentar una generación íntegra de IA como trabajo propio.</p>
+<section class="cover">
+  <div class="mark">✳</div>
+  <p>UNIVERSIDAD TECNOLÓGICA DE PANAMÁ<br>
+  Facultad de Ingeniería en Sistemas Computacionales<br>
+  Desarrollo Web — Proyecto Parcial 2 — 2026</p>
+  <h1>Netlinks</h1>
+  <h2 style="border:0;color:#193546">Book&amp;Go Lite · Gestor de citas con reseñas</h2>
+  <p>Soporte técnico: computadoras, redes, software y seguridad.</p>
+  <p><strong>Joseph Gantes · Henry Ramirez<br>Omar Herrera · Paul Zerpa</strong></p>
+  <p class="kv">Grupo <strong>JHOP</strong></p>
+  <p class="meta">Docente: Giovani Sánchez · Entrega: 12 de noviembre de 2026<br>
+  Repositorio: github.com/jsposu/Parcial2_NetlinksSupport_UTP<br>
+  Entorno verificado: XAMPP · PHP 8.2.12 · MariaDB 10.4.32 · Windows</p>
+</section>
+
+<h2 class="break">1. Negocio elegido</h2>
+<p><strong>Netlinks</strong> es un negocio de soporte técnico que ofrece servicios de computadoras, redes, software y seguridad. El sistema <strong>Book&amp;Go Lite</strong> resuelve la gestión de citas: un cliente explora el catálogo, consulta horarios con cupo, reserva, cancela cuando corresponde y reseña la atención recibida. El administrador mantiene categorías, servicios y horarios, confirma y cierra reservas, y administra las cuentas del sistema desde <strong>Administración de Usuarios</strong>.</p>
+<p>El catálogo de ejemplo incluye tres categorías y seis servicios con precio, duración y horarios. La interfaz es adaptable, usa CSS propio y no depende de servicios de Internet: funciona en el entorno local del equipo con XAMPP.</p>
+
+<h2>2. Módulos implementados</h2>
+<table>
+<tr><th style="width:22%">Módulo</th><th>Funcionamiento</th></tr>
+<tr><td>Identidad y acceso</td><td>Registro público solo para CLIENTE; ADMIN se crea por CLI local. Contraseñas con <code>password_hash</code>, sesiones regeneradas, roles revisados en cada petición, cambio obligatorio de la clave temporal en el primer acceso y bloqueo temporal tras cinco fallos.</td></tr>
+<tr><td>Catálogo</td><td>Búsqueda por nombre y filtro por categoría; detalle con horarios futuros, cupos y reseñas. CRUD de categorías, servicios y horarios con desactivación lógica.</td></tr>
+<tr><td>Horarios y cupos</td><td>Horarios por servicio con cupo total y disponible; solo se muestran los futuros. La reserva descuenta cupo dentro de una transacción con bloqueo de fila.</td></tr>
+<tr><td>Reservas</td><td>Reserva transaccional con comprobación de servicio, cupo y duplicados. Cancelación con devolución de un único cupo. El ADMIN confirma, marca realizada o cancela.</td></tr>
+<tr><td>Reseñas</td><td>Una reseña por reserva propia en estado REALIZADA, con calificación de 1 a 5. La salida se codifica y la CSP impide ejecutar scripts inyectados.</td></tr>
+<tr><td>Administración de Usuarios</td><td>Crear cuentas, cambiar rol CLIENTE/ADMIN, restablecer contraseñas temporales, ver intentos fallidos y estado de bloqueo, desbloquear, habilitar y deshabilitar cuentas. Protege la propia cuenta y exige al menos un administrador activo.</td></tr>
+<tr><td>Instalación y entrega</td><td><code>instalar.py</code> detecta XAMPP, reutiliza o crea la base, aplica migraciones, copia el sitio a <code>htdocs</code> e inicializa las cuentas. Incluye empaquetado reproducible con <code>bin/package.php</code>.</td></tr>
+</table>
+
+<h2>3. Modelo entidad–relación</h2>
+<div class="diagram">roles (1) ──── (N) usuarios (1) ──── (N) reservas (N) ──── (1) horarios (N) ──── (1) servicios (N) ──── (1) categorias
+                        │                     │                    │
+                        │                     │                    └── horarios(id, servicio_id) = clave compuesta
+                        │                     └── resenas(reserva_id) UNIQUE · FK compuesta (reserva_id, cliente_id)
+                        └── intentos_fallidos / bloqueado_hasta  (bloqueo por cuenta)
+
+intentos_login: tabla auxiliar para correos desconocidos (clave SHA-256 de correo+IP, fallos, vencimiento).</div>
+<p>Las claves primarias identifican cada fila y <code>usuarios.correo</code> es único. <code>reservas(horario_id, servicio_id)</code> referencia <code>horarios(id, servicio_id)</code>, de modo que una cita no puede apuntar a un servicio distinto del horario. <code>resenas(reserva_id, cliente_id)</code> referencia <code>reservas(id, cliente_id)</code> y la unicidad de <code>reserva_id</code> limita a una reseña por reserva. La columna generada <code>cliente_activo</code> deja NULL en canceladas y su índice único con <code>horario_id</code> evita reservas activas duplicadas. Las restricciones <code>CHECK</code> limitan precios, duraciones, horarios, cupos y calificación.</p>
+
+<h2 class="break">4. Flujo completo de una reserva</h2>
+<p>Secuencia ejecutada en el entorno local durante la verificación: el cliente reserva un horario, el administrador confirma y marca la atención como realizada, y el cliente publica una reseña. Cada paso se comprobó en navegador.</p>
+
+<div class="grid2">
+<figure><img src="../security/evidencias/00-home.jpeg" alt="Catálogo de servicios"><figcaption>Catálogo público con búsqueda, categorías y servicios.</figcaption></figure>
+<figure><img src="../security/evidencias/flujo-01-servicio.jpeg" alt="Detalle del servicio"><figcaption>Detalle del servicio con horarios futuros y cupos disponibles.</figcaption></figure>
+</div>
+<div class="grid2">
+<figure><img src="../security/evidencias/flujo-02-mis-reservas.jpeg" alt="Reserva creada"><figcaption>Reserva creada por el cliente en estado PENDIENTE.</figcaption></figure>
+<figure><img src="../security/evidencias/flujo-03-admin-pendiente.jpeg" alt="Panel de reservas del administrador"><figcaption>El administrador ve la solicitud pendiente y puede confirmarla.</figcaption></figure>
+</div>
+<div class="grid2">
+<figure><img src="../security/evidencias/flujo-04-admin-confirmada.jpeg" alt="Reserva confirmada"><figcaption>Transición PENDIENTE → CONFIRMADA.</figcaption></figure>
+<figure><img src="../security/evidencias/flujo-05-admin-realizada.jpeg" alt="Reserva realizada"><figcaption>Transición CONFIRMADA → REALIZADA, habilitando la reseña.</figcaption></figure>
+</div>
+<figure><img src="../security/evidencias/flujo-06-formulario-resena.jpeg" alt="Formulario de reseña"><figcaption>Formulario de reseña habilitado solo para una reserva propia en estado REALIZADA.</figcaption></figure>
+
+<h2>5. Capturas de los módulos</h2>
+<div class="grid2">
+<figure><img src="../security/evidencias/modulo-admin.jpeg" alt="Panel de administración"><figcaption>Panel de administración: categorías, servicios y horarios.</figcaption></figure>
+<figure><img src="../security/evidencias/modulo-admin-reservas.jpeg" alt="Seguimiento de reservas"><figcaption>Seguimiento de reservas de todos los clientes.</figcaption></figure>
+</div>
+<div class="grid2">
+<figure><img src="../security/evidencias/modulo-admin-centers.jpeg" alt="Administración de Usuarios"><figcaption>Administración de Usuarios: cuentas, roles, intentos fallidos, bloqueo y desbloqueo.</figcaption></figure>
+<figure><img src="../security/evidencias/cambio-obligatorio.jpeg" alt="Cambio obligatorio de contraseña"><figcaption>Cambio obligatorio de la contraseña temporal en el primer acceso.</figcaption></figure>
+</div>
+<figure><img src="../security/evidencias/modo-oscuro.jpeg" alt="Modo oscuro"><figcaption>Interfaz adaptable con modo oscuro persistente, también en Administración de Usuarios.</figcaption></figure>
+
+<h2 class="break">6. Controles de seguridad y evidencias</h2>
+<p>Las siete pruebas se ejecutaron el <strong>12 de noviembre de 2026</strong> sobre XAMPP (PHP 8.2.12 y MariaDB 10.4.32) en Windows, con una base aislada recién importada e inicializada. Las capturas están en <code>security/evidencias/</code>. Además, <code>tests/smoke.py</code> pasó completo y su salida se conserva en <code>pruebas-smoke-2026-11-12.txt</code>.</p>
+<table>
+<tr><th style="width:20%">Prueba</th><th style="width:38%">Resultado observado</th><th>Evidencia</th></tr>
+<tr><td>1. Inyección SQL en login</td><td>El correo <code>x' OR '1'='1</code> se rechaza con «Correo inválido»; no se autentica ni altera la consulta. PDO con parámetros preparados.</td><td><code>01-sqli.jpeg</code></td></tr>
+<tr><td>2. XSS en reseña</td><td>El comentario <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> se muestra como texto; no se ejecuta y el HTML no contiene el script crudo.</td><td><code>02-xss.jpeg</code></td></tr>
+<tr><td>3. Cliente en zona ADMIN</td><td>Un CLIENTE autenticado recibe <strong>HTTP 403</strong> («Acceso denegado») al abrir <code>?route=admin</code>.</td><td><code>03-cliente-admin.jpeg</code></td></tr>
+<tr><td>4. Reserva ajena</td><td>Un segundo cliente que envía el ID de una reserva ajena recibe <strong>HTTP 422</strong> («Reserva no encontrada»); no se modifica estado ni cupo.</td><td><code>04-reserva-ajena.jpeg</code></td></tr>
+<tr><td>5. CSRF</td><td>Un POST con token inválido recibe <strong>HTTP 403</strong> («token CSRF inválido») sin modificar datos.</td><td><code>05-csrf.jpeg</code></td></tr>
+<tr><td>6. Cinco intentos fallidos</td><td>Tras cinco claves erróneas, el sexto intento con la clave correcta queda bloqueado 15 minutos por cuenta.</td><td><code>06-cinco-intentos.jpeg</code></td></tr>
+<tr><td>7. Cabeceras HTTP</td><td>Respuesta con <code>Content-Security-Policy</code>, <code>X-Content-Type-Options: nosniff</code>, <code>X-Frame-Options: DENY</code>, <code>Referrer-Policy</code> y cookie <code>HttpOnly; SameSite=Lax</code>.</td><td><code>07-cabeceras.txt</code></td></tr>
+</table>
+<pre>HTTP/1.1 200 OK
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:;
+  form-action 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: strict-origin-when-cross-origin
+Set-Cookie: PHPSESSID=...; path=/; HttpOnly; SameSite=Lax</pre>
+
+<div class="grid2">
+<figure><img src="../security/evidencias/01-sqli.jpeg" alt="Prueba de inyección SQL"><figcaption>Prueba 1: la inyección SQL no autentica.</figcaption></figure>
+<figure><img src="../security/evidencias/02-xss.jpeg" alt="Prueba de XSS"><figcaption>Prueba 2: el script se muestra escapado en la reseña.</figcaption></figure>
+<figure><img src="../security/evidencias/03-cliente-admin.jpeg" alt="Cliente en zona admin"><figcaption>Prueba 3: HTTP 403 para CLIENTE en zona ADMIN.</figcaption></figure>
+<figure><img src="../security/evidencias/04-reserva-ajena.jpeg" alt="Reserva ajena"><figcaption>Prueba 4: reserva ajena rechazada.</figcaption></figure>
+<figure><img src="../security/evidencias/05-csrf.jpeg" alt="Prueba CSRF"><figcaption>Prueba 5: token CSRF inválido rechazado.</figcaption></figure>
+<figure><img src="../security/evidencias/06-cinco-intentos.jpeg" alt="Bloqueo por intentos"><figcaption>Prueba 6: bloqueo tras cinco intentos fallidos.</figcaption></figure>
+</div>
+
+<h3>Controles adicionales</h3>
+<ul>
+<li>Contraseñas con <code>password_hash</code>/<code>password_verify</code>; mínimo 12 caracteres con mayúscula, minúscula, número y símbolo, y máximo 72 bytes; nunca se almacenan en claro.</li>
+<li>Cambio obligatorio en el primer acceso: mientras esté pendiente solo se permite esa pantalla y salir; también se bloquean POST y URL directas.</li>
+<li>Al restablecer una clave o deshabilitar una cuenta se incrementa <code>password_version</code> y se revocan las sesiones abiertas.</li>
+<li>Autorización por rol y por propietario en PHP; errores sin SQL ni trazas en la respuesta.</li>
+<li>Transacciones con <code>SELECT … FOR UPDATE</code> para cupos y transiciones de estado; una cancelación repetida no devuelve cupos extra.</li>
+<li>Administración de Usuarios impide deshabilitar o degradar la propia cuenta y garantiza que quede al menos un administrador activo.</li>
+</ul>
+
+<h2 class="break">7. Distribución del trabajo y reflexión individual</h2>
+<p class="small">El siguiente reparto se basa en el historial de commits del repositorio. Cada integrante debe revisarlo y confirmarlo antes de la entrega.</p>
+<table>
+<tr><th style="width:17%">Integrante</th><th style="width:26%">Responsabilidad</th><th>Commits / trabajo verificable</th></tr>
+<tr><td><strong>Joseph Gantes</strong></td><td>Instalador, documentación y ajustes de interfaz</td><td><code>b62cec9</code> Instalador rápido para XAMPP y documentación · <code>309d664</code> Corrección de avisos y alineación del botón Buscar · <code>37de458</code> Declaración de uso de IA y responsabilidad</td></tr>
+<tr><td><strong>Paul Zerpa</strong></td><td>Identidad, contraseñas temporales y cambio obligatorio</td><td><code>6ec662a</code> Renombra NexoSoporte a Netlinks y actualiza cuentas de prueba · <code>eb20135</code> Contraseñas temporales y cambio obligatorio en el primer acceso <span class="small">(registrados con la cuenta <code>jsposu</code>)</span></td></tr>
+<tr><td><strong>Omar Herrera</strong></td><td>Interfaz, modo oscuro y Administración de Usuarios</td><td><code>e86981e</code> Modo oscuro con selector de tema · <code>6804c7c</code> Admin Centers para gestionar cuentas</td></tr>
+<tr><td><strong>Henry Ramirez</strong></td><td>Catálogo, datos de ejemplo y pruebas de reglas de negocio</td><td>Participación en el catálogo, categorías, servicios y horarios, y en la verificación manual de reservas. <span class="small">Sin commits propios en el historial; el equipo consigna su aporte.</span></td></tr>
+</table>
+
+<h3>Reflexiones individuales</h3>
+<p><strong>Joseph Gantes.</strong> Aprendí que instalar no es solo copiar archivos: el instalador debe detectar XAMPP, reutilizar la base sin borrar datos, aplicar migraciones y dejar el sistema listo en un solo paso. También entendí el valor de documentar cada decisión, porque un README claro evita que la puesta en marcha dependa de quien programó. La parte más difícil fue manejar los errores sin dejar el entorno a medias, y la más valiosa, comprobar que otra persona puede repetir el proceso desde cero.</p>
+<p><strong>Henry Ramirez.</strong> Mi trabajo se centró en el catálogo y en comprobar que las reglas de negocio se cumplieran: que un horario pertenezca al servicio correcto, que no se pueda reservar sin cupo y que las transiciones de estado tengan sentido. Aprendí que los datos de ejemplo importan tanto como el código, porque con ellos se detectan fallos que en teoría no aparecen. También reforcé la idea de probar siempre desde el punto de vista del usuario final.</p>
+<p><strong>Omar Herrera.</strong> Implementé el modo oscuro y Administración de Usuarios. El reto de Administración de Usuarios no fue la interfaz, sino la seguridad: evitar que un administrador se deshabilite a sí mismo o deje el sistema sin administradores, revocar sesiones al cambiar una clave y distinguir el bloqueo por cuenta del límite por correo e IP. Aprendí a diseñar pensando en el abuso, no solo en el uso normal, y a validar cada acción con pruebas automatizadas y en navegador.</p>
+<p><strong>Paul Zerpa.</strong> Trabajé en la identidad del sistema y en el cambio obligatorio de contraseñas. Entendí por qué una clave temporal debe caducar al primer uso, por qué hay que invalidar otras sesiones y por qué no se debe revelar si un correo existe. También comprobé que las decisiones de seguridad deben quedar documentadas y probadas, porque un control sin evidencia es difícil de defender. La experiencia me dejó más claro cómo se conectan autenticación, sesiones y experiencia de usuario.</p>
+
+<h2>8. Repositorio y contribuciones</h2>
+<p><strong>Repositorio:</strong> <code>https://github.com/jsposu/Parcial2_NetlinksSupport_UTP</code> (rama <code>master</code>).</p>
+<p>Historial verificado con <code>git shortlog -sn --all</code> y <code>git log --oneline</code>:</p>
+<table>
+<tr><th style="width:30%">Autor registrado</th><th style="width:15%">Commits</th><th>Integrante</th></tr>
+<tr><td><code>jsposu</code></td><td>5</td><td>Joseph Gantes; dos de esos commits corresponden a Paul Zerpa</td></tr>
+<tr><td><code>omargabriel0222-code</code></td><td>2</td><td>Omar Herrera</td></tr>
+</table>
+<p>Total: <strong>7 commits de desarrollo</strong> en <code>master</code>, incluidos el modo oscuro y la Administración de Usuarios. El commit de entrega que añade este informe y las evidencias se registra aparte. Para reproducir el historial:</p>
+<pre>git clone https://github.com/jsposu/Parcial2_NetlinksSupport_UTP.git
+cd Parcial2_NetlinksSupport_UTP
+git log --oneline --decorate
+git shortlog -sn --all</pre>
+<div class="notice"><strong>Nota de transparencia:</strong> el historial de GitHub agrupa los aportes bajo dos cuentas. La atribución de los commits <code>6ec662a</code> y <code>eb20135</code> a Paul Zerpa, y del catálogo y las pruebas a Henry Ramirez, la consigna el equipo; se recomienda dejarla confirmada en la sustentación.</div>
+
+<h2>9. Instalación y contenido de la entrega</h2>
+<ol>
+<li>Iniciar Apache y MySQL en XAMPP.</li>
+<li>Descomprimir el ZIP fuera de <code>htdocs</code> y ejecutar <code>py -3 instalar.py</code> (Windows) o <code>python3 instalar.py</code> (Linux/macOS).</li>
+<li>El instalador crea o reutiliza <code>bookgo_lite</code>, aplica migraciones, copia el sitio a <code>htdocs/Parcial2DesarrolloWeb</code> e inicializa las cuentas.</li>
+<li>Abrir <code>http://localhost/Parcial2DesarrolloWeb/public/</code> e ingresar con las claves temporales del README; el sistema exige cambiarlas.</li>
+</ol>
+<p>La instalación manual con <code>database/bookgo.sql</code>, <code>.env.example</code> y <code>bin/create-demo.php</code> está documentada en <code>README.md</code> y <code>docs/INSTALACION.md</code>.</p>
+<table>
+<tr><th style="width:34%">Archivo / carpeta</th><th>Contenido</th></tr>
+<tr><td><code>PW2026_JHOP_BookGoLite.zip</code></td><td>Código fuente completo, SQL, documentación, pruebas y evidencias.</td></tr>
+<tr><td><code>database/bookgo.sql</code></td><td>Creación de las ocho tablas, relaciones, restricciones y catálogo de ejemplo.</td></tr>
+<tr><td><code>README.md</code></td><td>Instalación recomendada y manual, credenciales de primer acceso, pruebas y empaquetado.</td></tr>
+<tr><td><code>security/SECURITY.md</code></td><td>Plan de verificación, resultados y referencia a cada evidencia.</td></tr>
+<tr><td><code>security/evidencias/</code></td><td>Capturas de las siete pruebas, del flujo de reserva y de los módulos; salidas de pruebas y cabeceras HTTP.</td></tr>
+<tr><td><code>docs/Informe.pdf</code></td><td>Este documento.</td></tr>
+</table>
+
+<h2>10. Uso de inteligencia artificial</h2>
+<p>El equipo utilizó <strong>OpenCode</strong> con varios modelos como apoyo para plantear la estructura y generar una primera implementación de código y documentación. Los requisitos, las ideas y la información del negocio fueron aportados manualmente por el equipo. Cada integrante revisó, ejecutó y probó el código, y asume la responsabilidad por lo entregado. Las capturas y salidas de pruebas de este informe corresponden a ejecuciones reales en el entorno local descritas en la sección 6.</p>
+
 </body></html>
