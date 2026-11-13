@@ -60,7 +60,7 @@ pre{background:#0f2b35;color:#d7efea;padding:10px 12px;border-radius:6px;font-si
 <h2>2. Módulos implementados</h2>
 <table>
 <tr><th style="width:22%">Módulo</th><th>Funcionamiento</th></tr>
-<tr><td>Identidad y acceso</td><td>Registro público solo para CLIENTE; ADMIN se crea por CLI local. Contraseñas con <code>password_hash</code>, sesiones regeneradas, roles revisados en cada petición, cambio obligatorio de la clave temporal en el primer acceso y bloqueo temporal tras cinco fallos.</td></tr>
+<tr><td>Identidad y acceso</td><td>Registro público solo para CLIENTE; ADMIN se crea por CLI local. Contraseñas con <code>password_hash</code> y política de 12 caracteres con mayúscula, minúscula, número y símbolo; sesiones regeneradas, roles revisados en cada petición, cambio obligatorio de la clave temporal en el primer acceso y bloqueo temporal tras cinco fallos.</td></tr>
 <tr><td>Catálogo</td><td>Búsqueda por nombre y filtro por categoría; detalle con horarios futuros, cupos y reseñas. CRUD de categorías, servicios y horarios con desactivación lógica.</td></tr>
 <tr><td>Horarios y cupos</td><td>Horarios por servicio con cupo total y disponible; solo se muestran los futuros. La reserva descuenta cupo dentro de una transacción con bloqueo de fila.</td></tr>
 <tr><td>Reservas</td><td>Reserva transaccional con comprobación de servicio, cupo y duplicados. Cancelación con devolución de un único cupo. El ADMIN confirma, marca realizada o cancela.</td></tr>
@@ -150,15 +150,15 @@ Set-Cookie: PHPSESSID=...; path=/; HttpOnly; SameSite=Lax</pre>
 <p class="small">El siguiente reparto se basa en el historial de commits del repositorio. Cada integrante debe revisarlo y confirmarlo antes de la entrega.</p>
 <table>
 <tr><th style="width:17%">Integrante</th><th style="width:26%">Responsabilidad</th><th>Commits / trabajo verificable</th></tr>
-<tr><td><strong>Joseph Gantes</strong></td><td>Instalador, documentación y ajustes de interfaz</td><td><code>b62cec9</code> Instalador rápido para XAMPP y documentación · <code>309d664</code> Corrección de avisos y alineación del botón Buscar · <code>37de458</code> Declaración de uso de IA y responsabilidad</td></tr>
+<tr><td><strong>Joseph Gantes</strong></td><td>Instalador, documentación y ajustes de interfaz</td><td><code>b62cec9</code> Instalador rápido para XAMPP y documentación · <code>309d664</code> Corrección de avisos y alineación del botón Buscar · <code>37de458</code> Declaración de uso de IA y responsabilidad · <code>9e20448</code> Captura actualizada del README</td></tr>
 <tr><td><strong>Paul Zerpa</strong></td><td>Identidad, contraseñas temporales y cambio obligatorio</td><td><code>6ec662a</code> Renombra NexoSoporte a Netlinks y actualiza cuentas de prueba · <code>eb20135</code> Contraseñas temporales y cambio obligatorio en el primer acceso <span class="small">(registrados con la cuenta <code>jsposu</code>)</span></td></tr>
 <tr><td><strong>Omar Herrera</strong></td><td>Interfaz, modo oscuro y Administración de Usuarios</td><td><code>e86981e</code> Modo oscuro con selector de tema · <code>6804c7c</code> Admin Centers para gestionar cuentas</td></tr>
-<tr><td><strong>Henry Ramirez</strong></td><td>Catálogo, datos de ejemplo y pruebas de reglas de negocio</td><td>Participación en el catálogo, categorías, servicios y horarios, y en la verificación manual de reservas. <span class="small">Sin commits propios en el historial; el equipo consigna su aporte.</span></td></tr>
+<tr><td><strong>Henry Ramirez</strong></td><td>Política de contraseñas, renombrado de la interfaz y pruebas de reglas de negocio</td><td><code>e94704e</code> Contraseñas de 12 caracteres con mayúscula, minúscula, número y símbolo · <code>4545d1c</code> Renombra Admin Centers y alinea los campos de contraseña temporal · Participación en el catálogo y verificación manual de reservas</td></tr>
 </table>
 
 <h3>Reflexiones individuales</h3>
 <p><strong>Joseph Gantes.</strong> Aprendí que instalar no es solo copiar archivos: el instalador debe detectar XAMPP, reutilizar la base sin borrar datos, aplicar migraciones y dejar el sistema listo en un solo paso. También entendí el valor de documentar cada decisión, porque un README claro evita que la puesta en marcha dependa de quien programó. La parte más difícil fue manejar los errores sin dejar el entorno a medias, y la más valiosa, comprobar que otra persona puede repetir el proceso desde cero.</p>
-<p><strong>Henry Ramirez.</strong> Mi trabajo se centró en el catálogo y en comprobar que las reglas de negocio se cumplieran: que un horario pertenezca al servicio correcto, que no se pueda reservar sin cupo y que las transiciones de estado tengan sentido. Aprendí que los datos de ejemplo importan tanto como el código, porque con ellos se detectan fallos que en teoría no aparecen. También reforcé la idea de probar siempre desde el punto de vista del usuario final.</p>
+<p><strong>Henry Ramirez.</strong> Mi trabajo se centró en el catálogo y en comprobar que las reglas de negocio se cumplieran, y después en endurecer la política de contraseñas y unificar el nombre de la administración de usuarios. Aprendí que los datos de ejemplo importan tanto como el código, porque con ellos se detectan fallos que en teoría no aparecen, y que una política de claves debe aplicarse en todos los puntos de entrada —registro, primer acceso y claves temporales— para que no quede una puerta débil. También reforcé la idea de probar siempre desde el punto de vista del usuario final.</p>
 <p><strong>Omar Herrera.</strong> Implementé el modo oscuro y Administración de Usuarios. El reto de Administración de Usuarios no fue la interfaz, sino la seguridad: evitar que un administrador se deshabilite a sí mismo o deje el sistema sin administradores, revocar sesiones al cambiar una clave y distinguir el bloqueo por cuenta del límite por correo e IP. Aprendí a diseñar pensando en el abuso, no solo en el uso normal, y a validar cada acción con pruebas automatizadas y en navegador.</p>
 <p><strong>Paul Zerpa.</strong> Trabajé en la identidad del sistema y en el cambio obligatorio de contraseñas. Entendí por qué una clave temporal debe caducar al primer uso, por qué hay que invalidar otras sesiones y por qué no se debe revelar si un correo existe. También comprobé que las decisiones de seguridad deben quedar documentadas y probadas, porque un control sin evidencia es difícil de defender. La experiencia me dejó más claro cómo se conectan autenticación, sesiones y experiencia de usuario.</p>
 
@@ -167,15 +167,16 @@ Set-Cookie: PHPSESSID=...; path=/; HttpOnly; SameSite=Lax</pre>
 <p>Historial verificado con <code>git shortlog -sn --all</code> y <code>git log --oneline</code>:</p>
 <table>
 <tr><th style="width:30%">Autor registrado</th><th style="width:15%">Commits</th><th>Integrante</th></tr>
-<tr><td><code>jsposu</code></td><td>5</td><td>Joseph Gantes; dos de esos commits corresponden a Paul Zerpa</td></tr>
-<tr><td><code>omargabriel0222-code</code></td><td>2</td><td>Omar Herrera</td></tr>
+<tr><td><code>jsposu</code></td><td>6</td><td>Joseph Gantes (4); dos de esos commits corresponden a Paul Zerpa</td></tr>
+<tr><td><code>omargabriel0222-code</code></td><td>3</td><td>Omar Herrera (2) y el commit de entrega de esta documentación</td></tr>
+<tr><td><code>Henry Ramirez</code></td><td>2</td><td>Henry Ramirez</td></tr>
 </table>
-<p>Total: <strong>7 commits de desarrollo</strong> en <code>master</code>, incluidos el modo oscuro y la Administración de Usuarios. El commit de entrega que añade este informe y las evidencias se registra aparte. Para reproducir el historial:</p>
+<p>Total: <strong>10 commits de desarrollo</strong> en <code>master</code>, incluidos el modo oscuro, la Administración de Usuarios y la política de contraseñas. El commit de entrega que añade este informe y las evidencias se registra aparte. Para reproducir el historial:</p>
 <pre>git clone https://github.com/jsposu/Parcial2_NetlinksSupport_UTP.git
 cd Parcial2_NetlinksSupport_UTP
 git log --oneline --decorate
 git shortlog -sn --all</pre>
-<div class="notice"><strong>Nota de transparencia:</strong> el historial de GitHub agrupa los aportes bajo dos cuentas. La atribución de los commits <code>6ec662a</code> y <code>eb20135</code> a Paul Zerpa, y del catálogo y las pruebas a Henry Ramirez, la consigna el equipo; se recomienda dejarla confirmada en la sustentación.</div>
+<div class="notice"><strong>Nota de transparencia:</strong> la cuenta <code>jsposu</code> agrupa commits de Joseph Gantes y Paul Zerpa; la cuenta <code>omargabriel0222-code</code> agrupa los de Omar Herrera y el commit de entrega. Henry Ramirez tiene commits propios. La atribución la confirma el equipo en la sustentación.</div>
 
 <h2>9. Instalación y contenido de la entrega</h2>
 <ol>

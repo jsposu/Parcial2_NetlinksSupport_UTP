@@ -75,15 +75,15 @@ Al ingresar debes cambiar la clave antes de usar el sistema: mínimo 12 caracter
 
 ## Repositorio y contribuciones
 
-Historial en `master` (7 commits de desarrollo, 2 autores registrados; el commit de entrega añade informe y evidencias). Verificación: `git log --oneline` y `git shortlog -sn --all`.
+Historial en `master` (10 commits de desarrollo, 3 autores registrados; el commit de entrega añade informe y evidencias). Verificación: `git log --oneline` y `git shortlog -sn --all`.
 
 | Integrante | Aporte | Commits |
 | --- | --- | --- |
-| Joseph Gantes | Instalador para XAMPP, documentación y ajustes de interfaz | `b62cec9`, `309d664`, `37de458` |
+| Joseph Gantes | Instalador para XAMPP, documentación y ajustes de interfaz | `b62cec9`, `309d664`, `37de458`, `9e20448` |
 | Paul Zerpa | Identidad, contraseñas temporales y cambio obligatorio | `6ec662a`, `eb20135` (registrados con la cuenta `jsposu`) |
 | Omar Herrera | Modo oscuro y Administración de Usuarios | `e86981e`, `6804c7c` |
-| Henry Ramirez | Catálogo, datos de ejemplo y verificación manual de reglas de negocio | Sin commits propios; aporte consignado por el equipo |
+| Henry Ramirez | Política de contraseñas, renombrado de la interfaz y pruebas de reglas de negocio | `e94704e`, `4545d1c` |
 
-La atribución de los commits de la cuenta `jsposu` a Joseph Gantes y Paul Zerpa, y el aporte de Henry Ramirez, los confirma el equipo en la sustentación.
+La atribución de los commits de la cuenta `jsposu` a Joseph Gantes y Paul Zerpa, y la de la cuenta `omargabriel0222-code` a Omar Herrera (más el commit de entrega), la confirma el equipo en la sustentación.
 
 **Uso de IA:** El equipo utilizó OpenCode con varios modelos como apoyo para desarrollar la estructura principal del código. Las ideas, los requisitos y la información del proyecto se proporcionaron manualmente a la IA. El equipo revisó y probó el código de este repositorio y asume la responsabilidad por cada línea de código entregada.
